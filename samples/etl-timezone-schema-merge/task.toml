@@ -1,19 +1,31 @@
-schema_version = "1.1"
+schema_version = "1.2"
 
 [task]
-name = "etl-timezone-schema-merge"
+name = "sanjith/etl-timezone-schema-merge"
 description = "Merge three quarterly transaction extracts with schema drift, mixed timezones, a DST gap, and overlap."
-authors = ["Sanjith"]
+authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "etl", "data-cleaning"]
 
+[metadata]
+
 [agent]
-timeout_sec = 900
+timeout_sec = 900.0
 
 [verifier]
-timeout_sec = 180
+timeout_sec = 180.0
+
+[verifier.env]
 
 [environment]
-allow_internet = false
+build_timeout_sec = 900.0
+os = "linux"
 cpus = 2
 memory_mb = 4096
-storage_mb = 2048
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

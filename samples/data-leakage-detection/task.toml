@@ -1,19 +1,31 @@
-schema_version = "1.1"
+schema_version = "1.2"
 
 [task]
-name = "data-leakage-detection"
+name = "sanjith/data-leakage-detection"
 description = "Find and fix three sources of train/test leakage in a churn classifier pipeline."
-authors = ["Sanjith"]
+authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "machine-learning", "debugging"]
 
+[metadata]
+
 [agent]
-timeout_sec = 900
+timeout_sec = 900.0
 
 [verifier]
-timeout_sec = 300
+timeout_sec = 300.0
+
+[verifier.env]
 
 [environment]
-allow_internet = false
+build_timeout_sec = 900.0
+os = "linux"
 cpus = 2
 memory_mb = 4096
-storage_mb = 2048
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

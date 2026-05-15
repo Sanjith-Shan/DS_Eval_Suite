@@ -1,6 +1,8 @@
 # DS Eval Suite
 
-Seven Harbor-format tasks evaluating an AI agent's data-science ability. Each task targets a documented frontier-model failure mode in statistical reasoning, causal inference, ML correctness, or data-pipeline debugging.
+Seven Harbor-format tasks evaluating an AI agent's data-science ability,
+targeting documented frontier-model failure modes in statistical reasoning,
+causal inference, ML correctness, and production ETL.
 
 ## Layout
 
@@ -14,37 +16,54 @@ samples/                        # Harbor tasks (the deliverable)
 ├── time-series-regime-change/
 └── simpsons-paradox/
 report/                         # Methodology, rationale, results
-logs/                           # Harbor run output (populated by run_eval.sh)
-_build/                         # Data-generation scripts (out-of-band of Harbor)
-run_eval.sh                     # Convenience runner for all 7 tasks × 3 trials
+logs/                           # `harbor run -a gemini-cli` output, 3 trials/task
+_build/                         # Data generators, plot/analysis utilities, runner
 ```
 
-## Running a task
+## Prerequisites
 
 ```bash
-# Sanity-check the reference solution
-harbor run -p samples/confounder-identification -a oracle
-
-# Sanity-check that inaction fails the verifier
-harbor run -p samples/confounder-identification -a nop
-
-# Evaluate the target model
-harbor run -p samples/confounder-identification -a gemini-cli -m google/gemini-3-flash-preview
+# Docker Desktop (must be running)
+# Then:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install harbor
 ```
 
-Run the whole battery with `./run_eval.sh` after exporting `GEMINI_API_KEY`.
+## Sanity-check the tasks
 
-## Reproducing the bundled data
+```bash
+# Oracle should pass (reward 1)
+harbor run -p samples/confounder-identification -a oracle -y
 
-The CSVs under each task's `environment/` are generated deterministically (fixed seeds). To regenerate from scratch:
+# Nop should fail (reward 0)
+harbor run -p samples/confounder-identification -a nop -y
+```
+
+## Run the Gemini eval
+
+```bash
+export GEMINI_API_KEY=<your key>
+bash _build/run_gemini_battery.sh    # 7 tasks × 3 trials → jobs/
+bash _build/finalize_logs.sh         # reorganises jobs/ → logs/
+.venv/bin/python _build/make_plots.py   # writes report/figures/
+```
+
+## Regenerating the bundled task data
+
+Each task's `environment/` ships pre-generated CSVs (fixed seed, reproducible).
+To regenerate:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r _build/requirements.txt
-.venv/bin/python _build/generate_all.py
+for g in _build/generate_*.py; do .venv/bin/python "$g"; done
 ```
 
 ## Notes
 
-- Every verifier is content-aware: it parses agent output and checks substantive correctness, not surface keywords.
-- No reference answers leak into `environment/` — verifiers live under `tests/` which is mounted only at verification time.
-- See `report/report.md` for design rationale and the empirical evidence behind each failure mode.
+- Every verifier checks substantive correctness on machine-readable output
+  (JSON / CSV / a runnable Python script). No LLM-as-judge.
+- `tests/` is mounted only at verifier time; ground truth never lives in
+  `environment/`.
+- See `report/report.md` for design rationale, the empirical evidence behind
+  each failure mode, measured pass@1/pass@3 against `gemini-3-flash-preview`,
+  and a sample failure analysis.

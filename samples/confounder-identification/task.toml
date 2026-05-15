@@ -1,19 +1,31 @@
-schema_version = "1.1"
+schema_version = "1.2"
 
 [task]
-name = "confounder-identification"
+name = "sanjith/confounder-identification"
 description = "Identify temperature as a confounder of ice-cream sales and drownings; reject the spurious causal claim."
-authors = ["Sanjith"]
+authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "causal-inference", "statistics"]
 
+[metadata]
+
 [agent]
-timeout_sec = 600
+timeout_sec = 600.0
 
 [verifier]
-timeout_sec = 120
+timeout_sec = 120.0
+
+[verifier.env]
 
 [environment]
-allow_internet = false
+build_timeout_sec = 900.0
+os = "linux"
 cpus = 2
 memory_mb = 4096
-storage_mb = 2048
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

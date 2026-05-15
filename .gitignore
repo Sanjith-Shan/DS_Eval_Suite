@@ -3,8 +3,9 @@
 venv/
 env/
 
-# Context file containing assignment brief and API key — never push
+# Context files containing assignment brief and API key — never push
 abundant-takehome-context.md
+Abundant Research Take Home.pdf
 *.context.md
 
 # Secrets / credentials
@@ -35,6 +36,14 @@ Thumbs.db
 *.swp
 *.swo
 
-# Harbor artefacts (will be regenerated on each run)
+# Harbor artefacts (live runs go in jobs/ and get reorganised into logs/)
 .harbor/
 harbor_runs/
+jobs/
+
+# Submission build artefact
+submission.zip
+
+# API keys and runtime credentials
+.gemini_key
+*.api_key
