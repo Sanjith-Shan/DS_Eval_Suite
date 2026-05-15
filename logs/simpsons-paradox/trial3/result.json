@@ -1,0 +1,105 @@
+{
+    "id": "29fb532a-56d6-41ba-b359-dee0ce5f6d82",
+    "task_name": "sanjith/simpsons-paradox",
+    "trial_name": "simpsons-paradox__SEGxrfp",
+    "trial_uri": "file:///Users/sanjithshanmugavel/Documents/DS_Eval_Suite/jobs/simpsons-paradox-gemini/simpsons-paradox__SEGxrfp",
+    "task_id": {
+        "path": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/samples/simpsons-paradox"
+    },
+    "source": null,
+    "task_checksum": "52dfa7328627fbf104807b144524785b487205dabe44e19042c79af808c65b91",
+    "config": {
+        "task": {
+            "path": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/samples/simpsons-paradox",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "simpsons-paradox__SEGxrfp",
+        "trials_dir": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/jobs/simpsons-paradox-gemini",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "gemini-cli",
+            "import_path": null,
+            "model_name": "google/gemini-3-flash-preview",
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {
+                "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+            }
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "mounts": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "env": {},
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "5d5fb77f-c092-4c41-9138-3d116ffc5eff"
+    },
+    "agent_info": {
+        "name": "gemini-cli",
+        "version": "0.42.0",
+        "model_info": {
+            "name": "gemini-3-flash-preview",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 275833,
+        "n_cache_tokens": 203235,
+        "n_output_tokens": 4653,
+        "cost_usd": 0.060419749999999994,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-15T23:34:50.973360Z",
+    "finished_at": "2026-05-15T23:36:24.855905Z",
+    "environment_setup": {
+        "started_at": "2026-05-15T23:34:50.980917Z",
+        "finished_at": "2026-05-15T23:34:55.909559Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-15T23:34:55.909611Z",
+        "finished_at": "2026-05-15T23:35:31.349206Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-15T23:35:31.350471Z",
+        "finished_at": "2026-05-15T23:36:21.545422Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-15T23:36:22.023267Z",
+        "finished_at": "2026-05-15T23:36:22.451412Z"
+    },
+    "step_results": null
+}

@@ -1,0 +1,105 @@
+{
+    "id": "0bfab556-065d-4f74-bdbe-4ca4a64b3b89",
+    "task_name": "sanjith/confounder-identification",
+    "trial_name": "confounder-identification__t5BEgSi",
+    "trial_uri": "file:///Users/sanjithshanmugavel/Documents/DS_Eval_Suite/jobs/confounder-identification-gemini/confounder-identification__t5BEgSi",
+    "task_id": {
+        "path": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/samples/confounder-identification"
+    },
+    "source": null,
+    "task_checksum": "043366e711144ccae877c6d97ff2c1df0aed07229bce0fa836ea289de93799b4",
+    "config": {
+        "task": {
+            "path": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/samples/confounder-identification",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "confounder-identification__t5BEgSi",
+        "trials_dir": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/jobs/confounder-identification-gemini",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "gemini-cli",
+            "import_path": null,
+            "model_name": "google/gemini-3-flash-preview",
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {
+                "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+            }
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "mounts": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "env": {},
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "51bf8ce1-7387-4acc-b719-8e1872ee237b"
+    },
+    "agent_info": {
+        "name": "gemini-cli",
+        "version": "0.42.0",
+        "model_info": {
+            "name": "gemini-3-flash-preview",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 298133,
+        "n_cache_tokens": 236291,
+        "n_output_tokens": 4150,
+        "cost_usd": 0.05518555,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-15T22:25:05.192644Z",
+    "finished_at": "2026-05-15T22:26:28.456571Z",
+    "environment_setup": {
+        "started_at": "2026-05-15T22:25:05.195603Z",
+        "finished_at": "2026-05-15T22:25:14.358706Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-15T22:25:14.358822Z",
+        "finished_at": "2026-05-15T22:25:41.253467Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-15T22:25:41.254136Z",
+        "finished_at": "2026-05-15T22:26:25.231776Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-15T22:26:25.736347Z",
+        "finished_at": "2026-05-15T22:26:26.122734Z"
+    },
+    "step_results": null
+}

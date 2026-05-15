@@ -1,0 +1,105 @@
+{
+    "id": "1967f920-c7a0-4543-abd7-1f11cc9083b7",
+    "task_name": "sanjith/time-series-regime-change",
+    "trial_name": "time-series-regime-change__kZuMoQM",
+    "trial_uri": "file:///Users/sanjithshanmugavel/Documents/DS_Eval_Suite/jobs/time-series-regime-change-gemini/time-series-regime-change__kZuMoQM",
+    "task_id": {
+        "path": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/samples/time-series-regime-change"
+    },
+    "source": null,
+    "task_checksum": "c950d5052e07d8a4d2293e2d897d8e52725b6f8855ba5b610d3a522fb2f64436",
+    "config": {
+        "task": {
+            "path": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/samples/time-series-regime-change",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "time-series-regime-change__kZuMoQM",
+        "trials_dir": "/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/jobs/time-series-regime-change-gemini",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "gemini-cli",
+            "import_path": null,
+            "model_name": "google/gemini-3-flash-preview",
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {
+                "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+            }
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "mounts": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "env": {},
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "b755f5a0-45aa-468e-b1e1-9e1b65d4ac6a"
+    },
+    "agent_info": {
+        "name": "gemini-cli",
+        "version": "0.42.0",
+        "model_info": {
+            "name": "gemini-3-flash-preview",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 273698,
+        "n_cache_tokens": 210817,
+        "n_output_tokens": 9511,
+        "cost_usd": 0.07051434999999999,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-15T23:25:45.887397Z",
+    "finished_at": "2026-05-15T23:28:17.097228Z",
+    "environment_setup": {
+        "started_at": "2026-05-15T23:25:45.935319Z",
+        "finished_at": "2026-05-15T23:25:53.370794Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-15T23:25:53.371070Z",
+        "finished_at": "2026-05-15T23:26:24.266097Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-15T23:26:24.266674Z",
+        "finished_at": "2026-05-15T23:28:13.217215Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-15T23:28:13.762455Z",
+        "finished_at": "2026-05-15T23:28:14.594708Z"
+    },
+    "step_results": null
+}
