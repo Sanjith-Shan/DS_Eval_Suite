@@ -1,0 +1,40 @@
+# Local virtualenv used for data generation
+.venv/
+venv/
+env/
+
+# Context file containing assignment brief and API key — never push
+abundant-takehome-context.md
+*.context.md
+
+# Secrets / credentials
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Harbor artefacts (will be regenerated on each run)
+.harbor/
+harbor_runs/

@@ -1,0 +1,19 @@
+schema_version = "1.1"
+
+[task]
+name = "time-series-regime-change"
+description = "Detect a mid-history regime change and forecast 30 days at the post-regime level."
+authors = ["Sanjith"]
+keywords = ["data-science", "time-series", "forecasting"]
+
+[agent]
+timeout_sec = 900
+
+[verifier]
+timeout_sec = 180
+
+[environment]
+allow_internet = false
+cpus = 2
+memory_mb = 4096
+storage_mb = 2048

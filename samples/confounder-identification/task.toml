@@ -1,0 +1,19 @@
+schema_version = "1.1"
+
+[task]
+name = "confounder-identification"
+description = "Identify temperature as a confounder of ice-cream sales and drownings; reject the spurious causal claim."
+authors = ["Sanjith"]
+keywords = ["data-science", "causal-inference", "statistics"]
+
+[agent]
+timeout_sec = 600
+
+[verifier]
+timeout_sec = 120
+
+[environment]
+allow_internet = false
+cpus = 2
+memory_mb = 4096
+storage_mb = 2048

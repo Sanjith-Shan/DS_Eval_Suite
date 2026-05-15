@@ -1,0 +1,19 @@
+schema_version = "1.1"
+
+[task]
+name = "ab-test-early-stopping"
+description = "Recognise that an A/B test stopped on day 5 is a false-positive peek; full data shows no effect."
+authors = ["Sanjith"]
+keywords = ["data-science", "experimentation", "statistics"]
+
+[agent]
+timeout_sec = 600
+
+[verifier]
+timeout_sec = 120
+
+[environment]
+allow_internet = false
+cpus = 2
+memory_mb = 4096
+storage_mb = 2048

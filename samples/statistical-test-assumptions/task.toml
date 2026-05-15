@@ -1,0 +1,19 @@
+schema_version = "1.1"
+
+[task]
+name = "statistical-test-assumptions"
+description = "Check ANOVA assumptions, choose an appropriate non-parametric alternative, and run pairwise comparisons."
+authors = ["Sanjith"]
+keywords = ["data-science", "statistics", "hypothesis-testing"]
+
+[agent]
+timeout_sec = 600
+
+[verifier]
+timeout_sec = 120
+
+[environment]
+allow_internet = false
+cpus = 2
+memory_mb = 4096
+storage_mb = 2048

@@ -1,0 +1,19 @@
+schema_version = "1.1"
+
+[task]
+name = "simpsons-paradox"
+description = "Resolve a Simpson's-Paradox treatment comparison by stratifying on severity."
+authors = ["Sanjith"]
+keywords = ["data-science", "statistics", "causal-inference"]
+
+[agent]
+timeout_sec = 600
+
+[verifier]
+timeout_sec = 120
+
+[environment]
+allow_internet = false
+cpus = 2
+memory_mb = 4096
+storage_mb = 2048
