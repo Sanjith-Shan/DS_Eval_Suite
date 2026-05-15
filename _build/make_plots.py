@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 
 
 ROOT = Path(__file__).resolve().parents[1]
-JOBS = ROOT / "jobs"
+LOGS = ROOT / "logs"
 FIG_DIR = ROOT / "report" / "figures"
 
 ORDER = [
@@ -46,13 +46,12 @@ SHORT = {
 
 
 def trial_rewards(task: str) -> list[float]:
-    """Collect per-attempt rewards across all trials for a Gemini run."""
-    job_dir = JOBS / f"{task}-gemini"
-    if not job_dir.exists():
+    """Collect per-attempt rewards from logs/<task>/trial*."""
+    task_dir = LOGS / task
+    if not task_dir.exists():
         return []
     rewards: list[float] = []
-    # Walk each trial directory: there's one subdir per trial.
-    for trial_dir in sorted(d for d in job_dir.iterdir() if d.is_dir()):
+    for trial_dir in sorted(task_dir.glob("trial*")):
         rfile = trial_dir / "verifier" / "reward.txt"
         if rfile.exists():
             try:
