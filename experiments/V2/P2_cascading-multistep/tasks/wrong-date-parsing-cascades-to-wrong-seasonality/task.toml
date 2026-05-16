@@ -1,0 +1,31 @@
+schema_version = "1.2"
+
+[task]
+name = "sanjith/wrong-date-parsing-cascades-to-wrong-seasonality"
+description = "Daily sales with mixed MM/DD/YYYY and DD/MM/YYYY date strings (US vs EU). Naive pandas parsing silently misreads 15% of dates, smearing the seasonal peak and trough."
+authors = [{ name = "Sanjith" }]
+keywords = ["data-science", "cascading-errors", "multi-step", "date-parsing", "seasonality"]
+
+[metadata]
+
+[agent]
+timeout_sec = 900.0
+
+[verifier]
+timeout_sec = 120.0
+
+[verifier.env]
+
+[environment]
+build_timeout_sec = 900.0
+os = "linux"
+cpus = 2
+memory_mb = 4096
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

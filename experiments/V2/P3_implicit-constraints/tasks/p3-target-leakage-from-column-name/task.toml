@@ -1,0 +1,31 @@
+schema_version = "1.2"
+
+[task]
+name = "sanjith/p3-target-leakage-from-column-name"
+description = "Build a churn classifier; two feature columns are post-outcome leaks of the target."
+authors = [{ name = "Sanjith" }]
+keywords = ["data-science", "implicit-constraints", "data-awareness", "target-leakage"]
+
+[metadata]
+
+[agent]
+timeout_sec = 900.0
+
+[verifier]
+timeout_sec = 300.0
+
+[verifier.env]
+
+[environment]
+build_timeout_sec = 900.0
+os = "linux"
+cpus = 2
+memory_mb = 4096
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

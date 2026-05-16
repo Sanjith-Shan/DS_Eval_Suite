@@ -1,0 +1,31 @@
+schema_version = "1.2"
+
+[task]
+name = "sanjith/wrong-aggregation-cascades-to-wrong-trend"
+description = "Hourly sensor data with weekday=16h and weekend=8h coverage. Daily sum mislabels every weekend as anomalous; daily mean reveals only the genuinely anomalous days."
+authors = [{ name = "Sanjith" }]
+keywords = ["data-science", "cascading-errors", "multi-step", "aggregation", "anomaly-detection"]
+
+[metadata]
+
+[agent]
+timeout_sec = 900.0
+
+[verifier]
+timeout_sec = 120.0
+
+[verifier.env]
+
+[environment]
+build_timeout_sec = 900.0
+os = "linux"
+cpus = 2
+memory_mb = 4096
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

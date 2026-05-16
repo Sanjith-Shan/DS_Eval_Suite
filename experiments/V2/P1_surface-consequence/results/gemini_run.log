@@ -1,0 +1,176 @@
+==> mnar-imputation-destroys-signal (3 trials)
+adhoc • gemini-cli • gemini-3-flash-preview
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃ Pass@2 ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━┩
+│      3 │          0 │ 1.000 │  1.000 │
+└────────┴────────────┴───────┴────────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 1.0    │     3 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 14m 10s
+Results written to 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/mnar-imputation-destroys-signal-gemini/result.json
+Inspect results by running `harbor view 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs`
+Share results by running `harbor upload 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/mnar-imputation-destroys-signal-gemini`
+
+  OK
+==> onehot-rare-categories-overfit (3 trials)
+adhoc • gemini-cli • gemini-3-flash-preview
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃ Pass@2 ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━┩
+│      3 │          0 │ 1.000 │  1.000 │
+└────────┴────────────┴───────┴────────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 1.0    │     3 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 9m 34s
+Results written to 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/onehot-rare-categories-overfit-gemini/result.json
+Inspect results by running `harbor view 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs`
+Share results by running `harbor upload 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/onehot-rare-categories-overfit-gemini`
+
+  OK
+==> outlier-removal-kills-minority-class (3 trials)
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃ Pass@2 ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━┩
+│      3 │          0 │ 0.333 │  0.667 │
+└────────┴────────────┴───────┴────────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 0.0    │     2 │
+│ 1.0    │     1 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 20m 28s
+Results written to 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/outlier-removal-kills-minority-class-gemini/result.json
+Inspect results by running `harbor view 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs`
+Share results by running `harbor upload 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/outlier-removal-kills-minority-class-gemini`
+
+  OK
+==> normalization-destroys-temporal-feature (3 trials)
+adhoc • gemini-cli • gemini-3-flash-preview
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃ Pass@2 ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━┩
+│      3 │          0 │ 1.000 │  1.000 │
+└────────┴────────────┴───────┴────────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 1.0    │     3 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 10m 31s
+Results written to 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/normalization-destroys-temporal-feature-gemini/result.json
+Inspect results by running `harbor view 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs`
+Share results by running `harbor upload 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/normalization-destroys-temporal-feature-gemini`
+
+  OK
+==> multicollinearity-after-log-transform (3 trials)
+adhoc • gemini-cli • gemini-3-flash-preview
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃ Pass@2 ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━┩
+│      3 │          0 │ 0.000 │  0.000 │
+└────────┴────────────┴───────┴────────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 0.0    │     3 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 5m 47s
+Results written to 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/multicollinearity-after-log-transform-gemini/result.json
+Inspect results by running `harbor view 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs`
+Share results by running `harbor upload 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/multicollinearity-after-log-transform-gemini`
+
+  OK
+==> deduplication-loses-valid-longitudinal-data (3 trials)
+adhoc • gemini-cli • gemini-3-flash-preview
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃ Pass@2 ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━┩
+│      3 │          0 │ 0.000 │  0.000 │
+└────────┴────────────┴───────┴────────┘
+
+┏━━━━━━━━┳━━━━━━━┓
+┃ Reward ┃ Count ┃
+┡━━━━━━━━╇━━━━━━━┩
+│ 0.0    │     3 │
+└────────┴───────┘
+
+Job Info
+Total runtime: 6m 17s
+Results written to 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/deduplication-loses-valid-longitudinal-data-gemini/result.json
+Inspect results by running `harbor view 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs`
+Share results by running `harbor upload 
+/Users/sanjithshanmugavel/Documents/DS_Eval_Suite/experiments/P1_surface-consequ
+ence/jobs/deduplication-loses-valid-longitudinal-data-gemini`
+
+  OK
+
+All tasks done. Summaries:
+mnar-imputation-destroys-signal:
+  gemini-cli__gemini-3-flash-preview__adhoc: pass=3/3 fail=0 err=0
+onehot-rare-categories-overfit:
+  gemini-cli__gemini-3-flash-preview__adhoc: pass=3/3 fail=0 err=0
+outlier-removal-kills-minority-class:
+  gemini-cli__gemini-3-flash-preview__adhoc: pass=1/3 fail=2 err=0
+normalization-destroys-temporal-feature:
+  gemini-cli__gemini-3-flash-preview__adhoc: pass=3/3 fail=0 err=0
+multicollinearity-after-log-transform:
+  gemini-cli__gemini-3-flash-preview__adhoc: pass=0/3 fail=3 err=0
+deduplication-loses-valid-longitudinal-data:
+  gemini-cli__gemini-3-flash-preview__adhoc: pass=0/3 fail=3 err=0
