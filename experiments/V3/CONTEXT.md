@@ -1,36 +1,42 @@
-# CONTEXT.md -- Assumption Verification Eval Suite
+# CONTEXT.md -- V3 Build Instructions
 
-## What This Project Is
+## Goal
 
-This is a take-home assignment for Abundant.AI. We are building 10 Harbor-format evaluation tasks that test whether Gemini Flash can independently verify statistical assumptions. All 10 tasks must target < 30% pass@3 against `gemini-3-flash-preview`.
+Build 10 Harbor tasks testing statistical assumption verification. All must target < 30% pass@3 against `gemini-3-flash-preview`. 4 tasks exist in V2 (copy them in). 6 are new (build from scratch).
 
-4 tasks are already built and confirmed (0/3 against Gemini). 6 tasks are new and need to be built from scratch, then all 10 tested.
+Every task: instruction asks for a standard analysis, data violates an assumption the instruction never mentions, model must independently catch and adjust. Verifier checks the numeric consequence, never the process.
 
-The Harbor reference docs and usage instructions are provided separately.
+Harbor docs are in `harbor-reference.md` (same directory as this file).
 
 ---
 
-## Project Structure
+## V3 Layout
+
+You are working inside `experiments/V3/`. Build this structure:
 
 ```
-DS_Eval_Suite/
-├── CONTEXT.md                          # this file
-├── samples/                            # final submission folder (all 10 tasks)
-│   ├── multicollinearity-after-log/
-│   ├── longitudinal-data-structure/
-│   ├── clustered-parametric-test/
-│   ├── survivorship-bias-sample/
-│   ├── autocorrelated-residuals/
-│   ├── multiple-comparisons/
-│   ├── influential-outliers/
-│   ├── clustered-treatment/
-│   ├── censored-survival/
-│   └── spurious-regression/
-├── logs/                               # harbor run output (>= 3 trials per task)
-└── report/                             # final report
+V3/
+├── CONTEXT.md                              # this file (already exists)
+├── harbor-reference.md                     # already exists
+├── Abundant Research Take Home.pdf         # already exists
+├── tasks/
+│   ├── multicollinearity-after-log/        # E1 (copied from V2)
+│   ├── longitudinal-data-structure/        # E2 (copied from V2)
+│   ├── clustered-parametric-test/          # E3 (copied from V2)
+│   ├── survivorship-bias-sample/           # E4 (copied from V2)
+│   ├── autocorrelated-residuals/           # N1 (new)
+│   ├── multiple-comparisons/              # N2 (new)
+│   ├── influential-outliers/              # N3 (new)
+│   ├── clustered-treatment/               # N4 (new)
+│   ├── censored-survival/                 # N5 (new)
+│   └── spurious-regression/               # N6 (new)
+├── _build/
+│   └── generate_<task>.py                  # one data generator per new task
+├── jobs/                                   # harbor run outputs land here
+└── REPORT.md
 ```
 
-Each task folder follows this exact layout:
+Each task folder follows Harbor layout:
 ```
 <task-name>/
 ├── instruction.md
@@ -48,15 +54,15 @@ Each task folder follows this exact layout:
 
 ---
 
-## Shared Technical Specs (apply to ALL 10 tasks)
+## Shared Templates
 
-### task.toml template
+### task.toml
 
 ```toml
 schema_version = "1.2"
 name = "sanjith/<task-name>"
 version = "1.0.0"
-description = "<one-line description>"
+description = "<one line>"
 authors = [{ name = "Sanjith" }]
 allow_internet = true
 
@@ -76,7 +82,7 @@ dockerfile = "environment/Dockerfile"
 [solution.env]
 ```
 
-### Dockerfile template
+### Dockerfile (default)
 
 ```dockerfile
 FROM python:3.11-slim
@@ -92,11 +98,9 @@ WORKDIR /workspace
 COPY *.csv /workspace/
 ```
 
-For task N5 (censored-survival), add `lifelines==0.29.0` to the pip install line.
+For N5 (censored-survival), add `lifelines==0.29.0` to pip install.
 
-### test.sh template
-
-Every test.sh follows this exact pattern:
+### test.sh (all tasks use this exactly)
 
 ```bash
 #!/bin/bash
@@ -105,35 +109,7 @@ cd /workspace
 python /tasks/tests/verify.py
 ```
 
-The verify.py script must handle all logic and write the reward:
-
-```python
-import json, sys, os
-
-def main():
-    reward_dir = "/logs/verifier"
-    os.makedirs(reward_dir, exist_ok=True)
-    reward_path = os.path.join(reward_dir, "reward.txt")
-    
-    try:
-        # ... verification logic ...
-        # If all checks pass:
-        with open(reward_path, "w") as f:
-            f.write("1")
-        print(f"reward=1 reason=all checks passed")
-        return True
-    except Exception as e:
-        with open(reward_path, "w") as f:
-            f.write("0")
-        print(f"reward=0 reason={e}")
-        return False
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0)  # always exit 0; reward file carries the signal
-```
-
-### solve.sh template
+### solve.sh (all tasks use this exactly)
 
 ```bash
 #!/bin/bash
@@ -142,162 +118,143 @@ cd /workspace
 python /tasks/solution/solve.py
 ```
 
+### verify.py skeleton
+
+```python
+import json, sys, os
+
+def main():
+    reward_dir = "/logs/verifier"
+    os.makedirs(reward_dir, exist_ok=True)
+    reward_path = os.path.join(reward_dir, "reward.txt")
+
+    try:
+        # load output, run checks, raise on failure
+        with open(reward_path, "w") as f:
+            f.write("1")
+        print("reward=1 reason=all checks passed")
+        return True
+    except Exception as e:
+        with open(reward_path, "w") as f:
+            f.write("0")
+        print(f"reward=0 reason={e}")
+        return False
+
+if __name__ == "__main__":
+    main()
+    sys.exit(0)  # always exit 0; reward file carries the signal
+```
+
 ### instruction.md rules
 
-- 2-3 paragraphs max
-- Describes a standard, realistic data science deliverable
-- NEVER mentions the assumption that needs to be verified
-- NEVER hints at the diagnostic step
-- Specifies the output path and format (JSON unless noted)
-- Written as if from a manager to a data scientist
-
-### Verifier rules
-
-- Checks numeric values or structural properties of the output, NEVER checks process/code
-- No AST inspection, no keyword grep on agent code, no LLM-as-judge
-- Deterministic -- same output always gets same reward
-- Must have a large gap between "assumption verified" and "assumption not verified" outputs
-- Always writes reward to /logs/verifier/reward.txt
-
-### Data generation
-
-- Every dataset has a standalone generate_data.py with a fixed seed
-- The generate_data.py is NOT shipped in the task folder -- it exists only for reproducibility
-- The generated CSV is placed in environment/ and ships with the task
-- All data generation uses numpy/pandas with explicit random seeds
+- 2-3 paragraphs, written as a manager assigning work to a data scientist
+- NEVER mentions the assumption, the diagnostic step, or hints at what's wrong with the data
+- Specifies the output path (`/output/analysis.json`) and JSON schema
 
 ---
 
-## EXISTING TASKS (4 tasks -- copy from prior experiments, adjust task.toml name only)
+## EXISTING TASKS -- copy from V2
 
-These 4 tasks are already fully built and confirmed at 0/3 against Gemini. They need to be copied into the samples/ folder. Their source locations are listed below. The ONLY change needed is updating the `name` field in task.toml to match the new naming convention.
+These 4 tasks are confirmed 0/3 against Gemini. Copy each folder into `tasks/`, rename the folder, and update the `name` field in task.toml. Change nothing else.
 
 ### E1: multicollinearity-after-log
 
-**Source:** `experiments/P1_surface-consequence/tasks/multicollinearity-after-log-transform/`
-**New task.toml name:** `sanjith/multicollinearity-after-log`
-**Gemini result:** 0/3 (identical failure, X2_pvalue=0.122 in every trial)
+**Copy from:** `../V2/P1_surface-consequence/tasks/multicollinearity-after-log-transform/`
+**Rename folder to:** `multicollinearity-after-log`
+**Set task.toml name to:** `sanjith/multicollinearity-after-log`
 
-Summary of what this task does (for reference, do NOT rebuild):
-- Agent is told to fix heteroscedasticity and report OLS coefficient p-values
-- Log(Y) fixes the heteroscedasticity but pushes X1-X2 correlation to ~0.99
-- Agent must independently check VIF, then use ridge regression with bootstrap p-values
-- Verifier requires all 4 p-values < 0.05 AND Breusch-Pagan p > 0.05
-- Plain OLS after log gives X2_pvalue=0.122 (fails); ridge gives X2_pvalue=0.032 (passes)
+What it tests: log(Y) fixes heteroscedasticity but inflates X1-X2 correlation to ~0.99. Model must check VIF and use ridge regression. Verifier requires all 4 p-values < 0.05 AND Breusch-Pagan p > 0.05. Naive OLS after log gives X2_p=0.122 (fails).
 
 ### E2: longitudinal-data-structure
 
-**Source:** `experiments/P1_surface-consequence/tasks/deduplication-loses-valid-longitudinal-data/`
-**New task.toml name:** `sanjith/longitudinal-data-structure`
-**Gemini result:** 0/3 (AUC=0.6733 in every trial)
+**Copy from:** `../V2/P1_surface-consequence/tasks/deduplication-loses-valid-longitudinal-data/`
+**Rename folder to:** `longitudinal-data-structure`
+**Set task.toml name to:** `sanjith/longitudinal-data-structure`
 
-Summary:
-- Agent is told to clean data (repeated patient_ids) and build a readmission classifier
-- Repeated IDs are multi-visit longitudinal records, not duplicates
-- Agent must recognize longitudinal structure and engineer delta features (current - previous visit)
-- Verifier requires AUC >= 0.72
-- Without delta features AUC=0.6733 (fails); with delta features AUC=0.884 (passes)
+What it tests: repeated patient_ids are multi-visit longitudinal records. Model must engineer delta features. Verifier requires AUC >= 0.72. Without deltas AUC=0.6733 (fails).
 
 ### E3: clustered-parametric-test
 
-**Source:** `experiments/P2_cascading-multistep/tasks/wrong-sampling-cascades-to-wrong-test/`
-**New task.toml name:** `sanjith/clustered-parametric-test`
-**Gemini result:** 0/3 (all three used Welch's t-test)
+**Copy from:** `../V2/P2_cascading-multistep/tasks/wrong-sampling-cascades-to-wrong-test/`
+**Rename folder to:** `clustered-parametric-test`
+**Set task.toml name to:** `sanjith/clustered-parametric-test`
 
-Summary:
-- 500 stores x 1000 rows of clustered transaction data
-- Agent is told to sample, describe, pick a stat test, and report
-- Clustered structure requires stratified sampling + non-parametric test (Mann-Whitney)
-- Verifier requires test_used to match non-parametric vocabulary AND reject parametric vocabulary
-- Gemini used Welch's t-test all 3 trials (fails)
+What it tests: 500 stores x 1000 rows of clustered data. Model must use non-parametric test. Verifier rejects any test_used containing "t-test"/"welch"/"student". Gemini used Welch's t-test all 3 trials.
 
 ### E4: survivorship-bias-sample
 
-**Source:** `experiments/P3_implicit-constraints/tasks/p3-survivorship-bias-in-dataset/`
-**New task.toml name:** `sanjith/survivorship-bias-sample`
-**Gemini result:** 0/3 (three different failure modes, all on-pattern)
+**Copy from:** `../V2/P3_implicit-constraints/tasks/p3-survivorship-bias-in-dataset/`
+**Rename folder to:** `survivorship-bias-sample`
+**Set task.toml name to:** `sanjith/survivorship-bias-sample`
 
-Summary:
-- Dataset contains only companies that survived to 2024
-- Agent is told to analyze predictors of company growth and write a report
-- Agent must independently flag survivorship/selection bias in the report
-- Verifier dual-gate: requires BOTH analysis content keywords AND bias-awareness keywords
-- Gemini failed to flag bias in all 3 trials
+What it tests: dataset only contains companies surviving to 2024. Model must flag survivorship bias in its analysis report. Verifier dual-gate requires BOTH analysis keywords AND bias-awareness keywords.
 
 ---
 
-## NEW TASKS (6 tasks -- build from scratch)
+## NEW TASKS -- build from scratch
+
+For each new task, write a `_build/generate_<name>.py` that creates the CSV with a fixed seed. Run the generator, confirm the validation conditions hold, then place the CSV in `tasks/<name>/environment/`. The generator is NOT part of the task folder.
+
+---
 
 ### N1: autocorrelated-residuals
 
-**Assumption tested:** Independence of residuals (OLS assumption #4)
+**Assumption tested:** Independence of OLS residuals
 
-**The trap:** Monthly time-ordered data where OLS residuals are strongly autocorrelated (Durbin-Watson ~0.6). Autocorrelation inflates standard errors for some predictors, creating a false positive. One predictor (X2) appears significant under naive OLS (p ~0.03) but is NOT significant under Newey-West HAC standard errors (p ~0.15). The model must independently check residual autocorrelation and use robust standard errors.
+**Trap:** 120 monthly observations. AR(1) residuals with rho=0.7 inflate standard errors. X2 appears significant under naive OLS (p ~0.03) but not under Newey-West HAC (p ~0.15). Model must check Durbin-Watson, then use robust SEs.
 
-#### generate_data.py specification
+**Data generation (`_build/generate_autocorrelated.py`):**
 
 ```
 Seed: 42
-N: 120 observations (monthly, Jan 2015 - Dec 2024)
+N: 120 (monthly, "2015-01" through "2024-12")
 
-True model:
-  Y = 2.5*X1 + 0.0*X2 + 1.8*X3 + 0.0*X4 + epsilon
-  where epsilon follows AR(1) with rho = 0.7 and innovation_sd = 3.0
+Predictors:
+  X1 ~ N(10, 2) + 0.02*t   (true predictor, trending)
+  X2 ~ N(5, 1.5) + 0.03*t  (null predictor, trending -- creates spurious correlation with AR errors)
+  X3 ~ N(8, 2.5) iid        (true predictor)
+  X4 ~ N(3, 1) iid           (null predictor)
 
-Generate predictors:
-  X1 ~ N(10, 2) with mild temporal trend (add 0.02*t)
-  X2 ~ N(5, 1.5) with moderate temporal trend (add 0.03*t) 
-  X3 ~ N(8, 2.5) iid
-  X4 ~ N(3, 1) iid
-
-The temporal trends in X1 and X2 combined with the AR(1) errors create 
-correlation between X2 and the residual process, which inflates X2's 
-t-statistic under naive OLS.
-
-Generate AR(1) noise:
-  e[0] ~ N(0, innovation_sd)
-  e[t] = rho * e[t-1] + N(0, innovation_sd)
+AR(1) noise:
+  e[0] ~ N(0, 3.0)
+  e[t] = 0.7 * e[t-1] + N(0, 3.0)
 
 Y = 2.5*X1 + 0.0*X2 + 1.8*X3 + 0.0*X4 + e
 
-Output columns: month, X1, X2, X3, X4, Y
-month format: "2015-01", "2015-02", ..., "2024-12"
+Columns: month, X1, X2, X3, X4, Y
+File: environment/business_data.csv
 
-VALIDATION (run after generation, assert all hold):
-  1. Naive OLS p-value for X2 < 0.05 (false positive present)
-  2. Naive OLS p-value for X1 < 0.05 (true positive)
-  3. Naive OLS p-value for X3 < 0.05 (true positive)
-  4. Naive OLS p-value for X4 > 0.10 (true negative)
-  5. Durbin-Watson statistic < 1.0 (strong autocorrelation)
-  6. Newey-West p-value for X2 > 0.05 (X2 no longer significant)
-  7. Newey-West p-value for X1 < 0.05 (X1 still significant)
-  8. Newey-West p-value for X3 < 0.05 (X3 still significant)
+VALIDATION (all must hold):
+  1. Naive OLS p(X1) < 0.05
+  2. Naive OLS p(X2) < 0.05   ← false positive
+  3. Naive OLS p(X3) < 0.05
+  4. Naive OLS p(X4) > 0.10
+  5. Durbin-Watson < 1.0
+  6. Newey-West p(X1) < 0.05
+  7. Newey-West p(X2) > 0.05  ← corrected
+  8. Newey-West p(X3) < 0.05
 
-If validation fails, adjust parameters (rho, trend slopes, innovation_sd) 
-and re-run until all 8 conditions hold. The key tuning knobs are:
-  - rho (higher = stronger autocorrelation = more SE inflation)
-  - X2 trend slope (higher = more spurious correlation with AR errors)
-  - innovation_sd (higher = noisier, makes marginal predictors less significant)
-
-Save as: environment/business_data.csv
+Tuning if validation fails:
+  - X2 not false-positive? Increase rho or X2 trend slope
+  - X2 still significant after Newey-West? Decrease X2 trend slope or increase innovation SD
 ```
 
-#### instruction.md
+**instruction.md:**
 
 ```markdown
 # Monthly Revenue Analysis
 
-You have a dataset of monthly business metrics (`business_data.csv`) spanning 
+You have a dataset of monthly business metrics (`business_data.csv`) spanning
 10 years (2015-2024). The columns are:
 
 - `month` -- the calendar month
 - `X1` -- marketing spend index
-- `X2` -- competitor activity index  
+- `X2` -- competitor activity index
 - `X3` -- customer satisfaction score
 - `X4` -- seasonal adjustment factor
 - `Y` -- monthly revenue (thousands)
 
-Fit a linear regression model to predict `Y` from `X1`, `X2`, `X3`, and `X4`. 
+Fit a linear regression model to predict `Y` from `X1`, `X2`, `X3`, and `X4`.
 Identify which predictors are statistically significant at the 5% level.
 
 Save your results to `/output/analysis.json` with this structure:
@@ -309,28 +266,25 @@ Save your results to `/output/analysis.json` with this structure:
   "r_squared": 0.65
 }
 
-List only predictors with p < 0.05 in `significant_predictors`. Include all 
+List only predictors with p < 0.05 in `significant_predictors`. Include all
 four predictors in `coefficients` and `p_values` regardless of significance.
 ```
 
-#### verify.py logic
+**verify.py checks:**
 
 ```
 1. Load /output/analysis.json
-2. Check required fields: significant_predictors, coefficients, p_values, r_squared
-3. Check "X1" IS in significant_predictors (true positive must be found)
-4. Check "X3" IS in significant_predictors (true positive must be found)
-5. Check "X2" is NOT in significant_predictors  <-- THIS IS THE KEY DISCRIMINATOR
-6. Check "X4" is NOT in significant_predictors (true negative)
-7. Check r_squared > 0 and r_squared < 1
-
-If all pass: reward = 1
-If any fail: reward = 0, print which check failed and the actual values
+2. Required fields: significant_predictors, coefficients, p_values, r_squared
+3. "X1" in significant_predictors        (true positive)
+4. "X3" in significant_predictors        (true positive)
+5. "X2" NOT in significant_predictors    ← KEY DISCRIMINATOR
+6. "X4" NOT in significant_predictors    (true negative)
+7. r_squared > 0 and < 1
 ```
 
-The critical check is #5. Naive OLS gives X2 p ~0.03 (would put it in significant_predictors). Newey-West gives X2 p ~0.15 (would exclude it). An agent that doesn't check for autocorrelation will include X2 and fail.
+Naive OLS puts X2 in significant_predictors (p ~0.03) and fails check 5. Newey-West excludes X2 (p ~0.15) and passes.
 
-#### solve.py (oracle)
+**solve.py (oracle):**
 
 ```python
 import pandas as pd
@@ -344,37 +298,32 @@ def main():
     X = df[["X1", "X2", "X3", "X4"]]
     y = df["Y"]
     X_const = sm.add_constant(X)
-    
-    # Step 1: Fit OLS
+
+    # Fit OLS
     ols = sm.OLS(y, X_const).fit()
-    
-    # Step 2: Check Durbin-Watson (THE ASSUMPTION VERIFICATION STEP)
+
+    # Check Durbin-Watson
     dw = durbin_watson(ols.resid)
     print(f"Durbin-Watson: {dw:.3f}")
-    # dw should be ~0.6, indicating strong positive autocorrelation
-    
-    # Step 3: Refit with Newey-West HAC standard errors
+
+    # Refit with HAC standard errors
     robust = ols.get_robustcov_results(cov_type="HAC", maxlags=int(np.ceil(len(df)**0.25)))
-    
-    # Step 4: Report based on robust p-values
+
     predictors = ["X1", "X2", "X3", "X4"]
     coefficients = {p: float(robust.params[p]) for p in predictors}
     p_values = {p: float(robust.pvalues[p]) for p in predictors}
     significant = [p for p in predictors if p_values[p] < 0.05]
-    
+
     result = {
         "significant_predictors": significant,
         "coefficients": coefficients,
         "p_values": p_values,
         "r_squared": float(ols.rsquared)
     }
-    
+
     os.makedirs("/output", exist_ok=True)
     with open("/output/analysis.json", "w") as f:
         json.dump(result, f, indent=2)
-    
-    print(f"Significant (robust): {significant}")
-    print(f"P-values (robust): {p_values}")
 
 if __name__ == "__main__":
     main()
@@ -384,107 +333,81 @@ if __name__ == "__main__":
 
 ### N2: multiple-comparisons
 
-**Assumption tested:** Family-wise error rate control when running many tests
+**Assumption tested:** Family-wise error rate control
 
-**The trap:** 8 drug formulations, 28 pairwise comparisons. At alpha=0.05 with 28 tests, expected false positives ~1.4. We engineer the data so that exactly 1 pair has a genuine effect and 2-3 pairs are false positives at 0.05 uncorrected. After Bonferroni/BH correction, only the real pair survives. The model must independently decide to correct for multiple comparisons.
+**Trap:** 8 drug formulations, 28 pairwise t-tests. 7 groups share the same true mean, 1 group (D) is genuinely different. At alpha=0.05 uncorrected, 3-4 pairs appear significant (1 real + 2-3 false positives). After Bonferroni/BH, only the real pair(s) involving D survive. Model must independently apply multiple comparison correction.
 
-#### generate_data.py specification
+**Data generation (`_build/generate_comparisons.py`):**
 
 ```
 Seed: 42
-8 groups (formulations A through H), 50 observations each = 400 total
+8 groups (A-H), 50 per group = 400 total
 
-True group means:
-  A: 100    E: 100
-  B: 100    F: 100  
-  C: 100    G: 100
-  D: 108    H: 100
-  (Only D differs from the rest. Cohen's d for A-vs-D = 8/15 = 0.53)
+Means: A=100, B=100, C=100, D=108, E=100, F=100, G=100, H=100
+Within-group SD: 15
 
-Within-group SD: 15 for all groups
+Generate 50 draws from N(mean, 15) per group.
 
-Generate: for each group, draw 50 values from N(mean, 15)
+Columns: patient_id, formulation, efficacy_score
+File: environment/drug_trial.csv
 
-VALIDATION (run after generation, assert all hold):
-  1. Run all 28 pairwise independent two-sample t-tests at alpha=0.05
-  2. Count pairs with p < 0.05. Must be >= 3 (1 real + 2+ false positives)
-  3. The real pair (any pair involving D vs a non-D group) must have p < 0.001
-  4. Apply Bonferroni correction (alpha = 0.05/28 = 0.001786)
-  5. After Bonferroni, the number of significant pairs must be <= 2
-  6. After Bonferroni, at least one D-vs-other pair must remain significant
+VALIDATION:
+  1. Uncorrected pairwise t-tests at alpha=0.05 yield >= 3 significant pairs
+  2. At least one D-vs-other pair has p < 0.001
+  3. After Bonferroni (alpha=0.05/28), significant pairs <= 2
+  4. At least one D-vs-other pair survives Bonferroni
 
-If validation fails, adjust the seed or the true mean for D until conditions hold.
-The key tuning knob is the mean of D (higher = more real pairs survive Bonferroni, 
-lower = real pair might not survive). 108 with SD=15 should work.
-
-IMPORTANT: the false positives must be between non-D groups (e.g., B vs F, 
-or A vs G). If the seed doesn't produce at least 2 false positives among 
-the 21 non-D pairwise tests, try seeds 43, 44, etc. until it does. With 
-21 tests at alpha=0.05, probability of >= 2 false positives is ~1 - (0.95^21 + 21*0.05*0.95^20) ≈ 0.66, so most seeds will work.
-
-Output columns: patient_id, formulation, efficacy_score
-Save as: environment/drug_trial.csv
+Tuning: if < 3 uncorrected false positives, try seeds 43, 44, ...
+If real pair doesn't survive Bonferroni, increase D mean to 110.
 ```
 
-#### instruction.md
+**instruction.md:**
 
 ```markdown
 # Drug Formulation Comparison
 
-A pharmaceutical company tested 8 formulations (A through H) of a new drug. 
-Each formulation was given to 50 patients, and their efficacy scores were 
+A pharmaceutical company tested 8 formulations (A through H) of a new drug.
+Each formulation was given to 50 patients, and their efficacy scores were
 recorded in `drug_trial.csv`. The columns are:
 
 - `patient_id` -- unique patient identifier
-- `formulation` -- which formulation the patient received (A-H)
+- `formulation` -- which formulation (A-H)
 - `efficacy_score` -- measured treatment efficacy
 
-For every pair of formulations, test whether their mean efficacy scores 
-differ significantly at the 5% level. Report all pairs that show a 
-statistically significant difference.
+For every pair of formulations, test whether their mean efficacy scores differ
+significantly at the 5% level. Report all pairs with significant differences.
 
-Save your results to `/output/analysis.json` with this structure:
+Save your results to `/output/analysis.json`:
 
 {
-  "significant_pairs": [["A", "D"], ["B", "F"]],
+  "significant_pairs": [["A", "D"]],
   "total_comparisons": 28,
-  "test_used": "independent two-sample t-test",
+  "test_used": "t-test",
   "details": {
-    "A_vs_D": {"t_statistic": 3.2, "p_value": 0.002},
-    "B_vs_F": {"t_statistic": 2.1, "p_value": 0.04}
+    "A_vs_D": {"t_statistic": 3.2, "p_value": 0.002}
   }
 }
 
-Each entry in `significant_pairs` should be a two-element list with the 
-formulation letters in alphabetical order. Include test details for the 
-significant pairs.
+Each pair in `significant_pairs` should be alphabetically ordered.
 ```
 
-#### verify.py logic
+**verify.py checks:**
 
 ```
 1. Load /output/analysis.json
-2. Check required fields: significant_pairs, total_comparisons
-3. Normalize all pairs to alphabetical order for comparison
-4. Check that at least one pair involving "D" is in significant_pairs 
-   (the real signal must be detected)
-5. Check len(significant_pairs) <= 2  <-- THIS IS THE KEY DISCRIMINATOR
-   (Uncorrected results will have 3-4 pairs; corrected will have 1-2)
-6. Check total_comparisons == 28 (or >= 20, to be lenient on methodology)
+2. Required: significant_pairs, total_comparisons
+3. Normalize pairs to alphabetical order
+4. At least one pair involving "D" is present   (real signal detected)
+5. len(significant_pairs) <= 2                  ← KEY DISCRIMINATOR
+6. total_comparisons >= 20
 
-If all pass: reward = 1
-If #5 fails (too many significant pairs): reward = 0, reason = "too many 
-significant pairs reported ({n}), expected <= 2 after correction for 
-multiple comparisons"
+Uncorrected: 3-4 pairs → fails check 5. Corrected: 1-2 pairs → passes.
 ```
 
-The critical check is #5. Without multiple comparison correction, 3-4 pairs will be reported as significant. With correction, only 1-2 survive. The verifier doesn't check WHETHER the agent applied Bonferroni -- it checks the CONSEQUENCE (number of reported pairs).
-
-#### solve.py (oracle)
+**solve.py (oracle):**
 
 ```python
 import pandas as pd
-import numpy as np
 from scipy import stats
 from itertools import combinations
 import json, os
@@ -492,43 +415,36 @@ import json, os
 def main():
     df = pd.read_csv("drug_trial.csv")
     formulations = sorted(df["formulation"].unique())
-    
     pairs = list(combinations(formulations, 2))
-    results = {}
+
     p_values = []
-    
+    results = {}
     for a, b in pairs:
-        data_a = df[df["formulation"] == a]["efficacy_score"]
-        data_b = df[df["formulation"] == b]["efficacy_score"]
-        t_stat, p_val = stats.ttest_ind(data_a, data_b)
-        key = f"{a}_vs_{b}"
-        results[key] = {"t_statistic": float(t_stat), "p_value": float(p_val)}
-        p_values.append((a, b, p_val))
-    
-    # Apply Bonferroni correction
-    n_tests = len(pairs)
-    alpha_corrected = 0.05 / n_tests
-    
+        da = df[df["formulation"] == a]["efficacy_score"]
+        db = df[df["formulation"] == b]["efficacy_score"]
+        t, p = stats.ttest_ind(da, db)
+        results[f"{a}_vs_{b}"] = {"t_statistic": float(t), "p_value": float(p)}
+        p_values.append((a, b, p))
+
+    # Bonferroni correction
+    alpha_corrected = 0.05 / len(pairs)
     significant = []
     details = {}
     for a, b, p in p_values:
         if p < alpha_corrected:
             significant.append([a, b])
             details[f"{a}_vs_{b}"] = results[f"{a}_vs_{b}"]
-    
+
     output = {
         "significant_pairs": significant,
-        "total_comparisons": n_tests,
-        "test_used": f"independent two-sample t-test with Bonferroni correction (alpha={alpha_corrected:.6f})",
+        "total_comparisons": len(pairs),
+        "test_used": f"t-test with Bonferroni correction (alpha={alpha_corrected:.6f})",
         "details": details
     }
-    
+
     os.makedirs("/output", exist_ok=True)
     with open("/output/analysis.json", "w") as f:
         json.dump(output, f, indent=2)
-    
-    print(f"Corrected alpha: {alpha_corrected:.6f}")
-    print(f"Significant pairs: {significant}")
 
 if __name__ == "__main__":
     main()
@@ -538,67 +454,52 @@ if __name__ == "__main__":
 
 ### N3: influential-outliers
 
-**Assumption tested:** No unduly influential observations driving the regression
+**Assumption tested:** No unduly influential observations
 
-**The trap:** 200 observations with a weak positive relationship (true coefficient ~0.3). 4 high-leverage points at extreme X values with extreme Y values inflate the apparent coefficient to ~0.75. These points are NOT outliers in Y alone (their Y values are within 2 SD of the Y mean) -- they are only detectable via leverage/Cook's distance analysis. The model must independently check influence diagnostics and either remove or downweight the influential points.
+**Trap:** 200 points with true coefficient ~0.3. 4 high-leverage points (extreme X, high Y) inflate the coefficient to ~0.75. The 4 points are NOT outliers in Y-space (within 2 SD of Y mean), only detectable via Cook's distance. Model must check influence diagnostics and remove/downweight.
 
-#### generate_data.py specification
+**Data generation (`_build/generate_influential.py`):**
 
 ```
 Seed: 42
-N_clean: 196 observations
-N_influential: 4 observations
-Total: 200
+N_clean: 196
+N_influential: 4
 
-Clean data:
-  X ~ N(50, 10)
-  Y = 0.30 * X + N(0, 8)  (weak positive relationship)
-  
-Influential points (high leverage, pulling slope up):
-  X values: [90, 93, 96, 99]  (far from X mean of 50)
-  Y values: [75, 80, 85, 90]  (these are high but within 2 SD of Y mean)
-  
-  These points have high leverage (extreme X) AND high residual 
-  (Y is much higher than 0.30*X would predict), so Cook's distance 
-  will be very high.
+Clean: X ~ N(50, 10), Y = 0.30*X + N(0, 8)
+Influential: X = [90, 93, 96, 99], Y = [75, 80, 85, 90]
 
-VALIDATION (run after generation, assert all hold):
-  1. Full-data OLS coefficient > 0.60 (inflated by influential points)
-  2. Clean-data OLS coefficient in [0.20, 0.45] (the true relationship)
-  3. Full-data R² > 0.25
-  4. Clean-data R² < 0.15
-  5. All 4 influential points have Cook's distance > 4/N = 0.02
-  6. No clean point has Cook's distance > 0.02
-  7. The 4 influential points are NOT outliers by simple Y z-score 
-     (|z_Y| < 2.5 for all 4)
+Columns: observation_id, advertising_spend, sales_revenue
+File: environment/advertising_data.csv
 
-If validation fails, adjust Y noise SD or influential point Y values.
-Key tuning: the influential points need to be far enough in X to create 
-leverage, with Y values high enough to pull the slope, but not so high 
-in Y that simple outlier detection catches them.
+VALIDATION:
+  1. Full-data OLS coefficient > 0.60
+  2. Clean-data OLS coefficient in [0.20, 0.45]
+  3. Full-data R-squared > 0.25
+  4. Clean-data R-squared < 0.15
+  5. All 4 influential points: Cook's d > 4/N
+  6. No clean point: Cook's d > 4/N
+  7. Influential points Y z-scores: |z| < 2.5 (not Y outliers)
 
-Output columns: observation_id, advertising_spend, sales_revenue
-(X = advertising_spend, Y = sales_revenue)
-Save as: environment/advertising_data.csv
+Tuning: move influential X values further out or adjust their Y values.
 ```
 
-#### instruction.md
+**instruction.md:**
 
 ```markdown
 # Advertising and Sales Analysis
 
-You have data on advertising spend and sales revenue for 200 observations 
+You have data on advertising spend and sales revenue for 200 observations
 in `advertising_data.csv`. The columns are:
 
 - `observation_id` -- unique identifier
 - `advertising_spend` -- monthly advertising budget (thousands)
 - `sales_revenue` -- monthly sales revenue (thousands)
 
-Fit a linear regression of `sales_revenue` on `advertising_spend`. Report 
-the regression coefficient, R-squared, p-value, and the number of 
+Fit a linear regression of `sales_revenue` on `advertising_spend`. Report
+the regression coefficient, R-squared, p-value, and the number of
 observations used in the final model.
 
-Save your results to `/output/analysis.json` with this structure:
+Save your results to `/output/analysis.json`:
 
 {
   "coefficient": 0.45,
@@ -609,24 +510,17 @@ Save your results to `/output/analysis.json` with this structure:
 }
 ```
 
-#### verify.py logic
+**verify.py checks:**
 
 ```
 1. Load /output/analysis.json
-2. Check required fields: coefficient, r_squared, p_value, significant, n_observations_used
-3. Check coefficient is in [0.15, 0.50]  <-- KEY DISCRIMINATOR
-   (Full-data coefficient ~0.75 fails; clean-data coefficient ~0.30 passes)
-4. Check r_squared < 0.25 (clean-data R² is ~0.08-0.12)
-5. Check significant is true (the relationship is real, just weaker)
-6. Check n_observations_used <= 198 (must have removed at least 2 points)
-   OR check coefficient is in band (primary check; n_observations is secondary)
-
-If all pass: reward = 1
-If coefficient > 0.50: reward = 0, reason = "coefficient {val} > 0.50, 
-likely includes influential outliers (expected ~0.30 after removal)"
+2. Required: coefficient, r_squared, p_value, significant, n_observations_used
+3. coefficient in [0.15, 0.50]   ← KEY DISCRIMINATOR (full-data ~0.75 fails)
+4. r_squared < 0.25
+5. significant == true           (relationship is real, just weaker)
 ```
 
-#### solve.py (oracle)
+**solve.py (oracle):**
 
 ```python
 import pandas as pd
@@ -639,28 +533,20 @@ def main():
     X = df[["advertising_spend"]]
     y = df["sales_revenue"]
     X_const = sm.add_constant(X)
-    
-    # Step 1: Fit initial OLS
+
     model = sm.OLS(y, X_const).fit()
-    
-    # Step 2: Compute Cook's distance (THE ASSUMPTION VERIFICATION STEP)
+
+    # Check Cook's distance
     influence = model.get_influence()
     cooks_d = influence.cooks_distance[0]
     threshold = 4 / len(df)
-    
-    # Step 3: Remove influential points
-    influential_mask = cooks_d > threshold
-    n_removed = influential_mask.sum()
-    print(f"Removing {n_removed} influential points (Cook's d > {threshold:.4f})")
-    
-    df_clean = df[~influential_mask]
-    X_clean = df_clean[["advertising_spend"]]
+    influential = cooks_d > threshold
+
+    df_clean = df[~influential]
+    X_clean = sm.add_constant(df_clean[["advertising_spend"]])
     y_clean = df_clean["sales_revenue"]
-    X_clean_const = sm.add_constant(X_clean)
-    
-    # Step 4: Refit on clean data
-    model_clean = sm.OLS(y_clean, X_clean_const).fit()
-    
+    model_clean = sm.OLS(y_clean, X_clean).fit()
+
     result = {
         "coefficient": float(model_clean.params["advertising_spend"]),
         "r_squared": float(model_clean.rsquared),
@@ -668,13 +554,10 @@ def main():
         "significant": bool(model_clean.pvalues["advertising_spend"] < 0.05),
         "n_observations_used": int(len(df_clean))
     }
-    
+
     os.makedirs("/output", exist_ok=True)
     with open("/output/analysis.json", "w") as f:
         json.dump(result, f, indent=2)
-    
-    print(f"Original coefficient: {model.params['advertising_spend']:.4f}")
-    print(f"Clean coefficient: {model_clean.params['advertising_spend']:.4f}")
 
 if __name__ == "__main__":
     main()
@@ -684,55 +567,43 @@ if __name__ == "__main__":
 
 ### N4: clustered-treatment
 
-**Assumption tested:** Independence of observations when treatment is assigned at group level
+**Assumption tested:** Independence of observations (t-test)
 
-**The trap:** An education study where a teaching method was assigned at the section level (not student level). 40 sections, 25 students each. Within-section correlation (ICC ~0.25) means student-level observations are NOT independent. A naive student-level t-test (n=1000) gives p ~0.002 (falsely significant). Aggregating to section means (n=40) gives p ~0.18 (correctly non-significant). The model must independently recognize that treatment varies at the section level and adjust the unit of analysis.
+**Trap:** 40 sections, 25 students each. Treatment assigned at section level (20 treatment, 20 control). ICC ~0.25. Student-level t-test gives p ~0.002 (inflated N). Section-level aggregated t-test gives p ~0.18 (correct). Model must recognize treatment varies only between sections and aggregate.
 
-#### generate_data.py specification
+**Data generation (`_build/generate_clustered.py`):**
 
 ```
 Seed: 42
-N_sections: 40 (20 treatment, 20 control)
-Students_per_section: 25
-Total students: 1000
+40 sections, 25 students each = 1000 total
+20 sections: treatment ("new_method"), 20: control ("standard")
 
-Data generating process:
-  Section-level effect: section_mean ~ N(75, 4) for control, N(76.5, 4) for treatment
-  Student-level noise: score = section_mean + N(0, 7)
-  
-  This gives ICC = 4^2 / (4^2 + 7^2) = 16/65 ≈ 0.246
-  
-  True treatment effect at section level: 1.5 points (small, Cohen's d ≈ 1.5/4 = 0.375 at section level)
-  But with only 20 sections per group and between-section SD=4, this is NOT significant
-  
-  At student level, the pooled SD ≈ sqrt(4^2 + 7^2) ≈ 8.06
-  Student-level Cohen's d ≈ 1.5/8.06 ≈ 0.186 (very small)
-  But n=500 per group makes even tiny effects "significant" in a naive t-test
+Section means: control ~ N(75, 4), treatment ~ N(76.5, 4)
+Student scores: section_mean + N(0, 7)
+ICC = 16/(16+49) ≈ 0.25
 
-VALIDATION (run after generation, assert all hold):
-  1. Student-level t-test p-value < 0.01 (inflated significance)
-  2. Section-level t-test on section means p-value > 0.05 (correct result)
-  3. Section-level t-test p-value > 0.10 (clearly non-significant)
-  4. ICC computed from one-way ANOVA is between 0.15 and 0.35
+Columns: student_id, section_id, treatment_group, test_score
+File: environment/education_study.csv
 
-If validation fails, adjust section-level SD, student noise SD, or 
-treatment effect size. Key constraint: student-level p must be < 0.01 
-AND section-level p must be > 0.05. The treatment effect (1.5) and 
-section SD (4) are the main tuning knobs.
+VALIDATION:
+  1. Student-level t-test p < 0.01
+  2. Section-level t-test (on section means) p > 0.05
+  3. Section-level p > 0.10 (clearly non-significant)
+  4. ICC between 0.15 and 0.35
 
-Output columns: student_id, section_id, treatment_group, test_score
-treatment_group values: "new_method" or "standard"
-Save as: environment/education_study.csv
+Tuning:
+  - Student p not < 0.01? Increase treatment effect or decrease student noise
+  - Section p not > 0.05? Decrease treatment effect or increase section SD
 ```
 
-#### instruction.md
+**instruction.md:**
 
 ```markdown
 # Teaching Method Evaluation
 
-An education researcher conducted a study comparing a new teaching method 
-against the standard approach. Students were organized into 40 sections, 
-with each section using either the new method or the standard method. Test 
+An education researcher conducted a study comparing a new teaching method
+against the standard approach. Students were organized into 40 sections,
+with each section using either the new method or the standard method. Test
 scores were recorded for all students.
 
 The data is in `education_study.csv` with columns:
@@ -740,12 +611,12 @@ The data is in `education_study.csv` with columns:
 - `student_id` -- unique student identifier
 - `section_id` -- which section the student belongs to
 - `treatment_group` -- "new_method" or "standard"
-- `test_score` -- the student's score on the final exam
+- `test_score` -- the student's final exam score
 
-Determine whether the new teaching method produces significantly better 
-test scores than the standard method. Report your findings.
+Determine whether the new teaching method produces significantly better
+test scores than the standard method.
 
-Save your results to `/output/analysis.json` with this structure:
+Save your results to `/output/analysis.json`:
 
 {
   "significant": true,
@@ -757,71 +628,44 @@ Save your results to `/output/analysis.json` with this structure:
 }
 ```
 
-#### verify.py logic
+**verify.py checks:**
 
 ```
 1. Load /output/analysis.json
-2. Check required fields: significant, p_value
-3. PRIMARY CHECK: p_value must be > 0.05  <-- KEY DISCRIMINATOR
-   (Student-level t-test gives ~0.002, section-level gives ~0.18)
-4. OR: significant must be false
-5. Either check is sufficient: if p_value > 0.05 OR significant == false, pass
-
-If p_value <= 0.05 AND significant is true: reward = 0, 
-  reason = "p_value={val} suggests student-level analysis without 
-  accounting for section-level clustering (expected p > 0.05 after 
-  proper aggregation)"
+2. Required: significant, p_value
+3. p_value > 0.05 OR significant == false   ← KEY DISCRIMINATOR
+   Student-level gives p ~0.002 → fails. Section-level gives p ~0.18 → passes.
 ```
 
-#### solve.py (oracle)
+**solve.py (oracle):**
 
 ```python
 import pandas as pd
-import numpy as np
 from scipy import stats
 import json, os
 
 def main():
     df = pd.read_csv("education_study.csv")
-    
-    # Step 1: Examine data structure
-    print(f"Total students: {len(df)}")
-    print(f"Sections: {df['section_id'].nunique()}")
-    print(f"Students per section: {df.groupby('section_id').size().mean():.0f}")
-    
-    # Step 2: Check -- does treatment vary within sections?
-    section_treatments = df.groupby("section_id")["treatment_group"].nunique()
-    print(f"Treatments per section: {section_treatments.unique()}")
-    # All sections have exactly 1 treatment -- treatment assigned at section level!
-    
-    # Step 3: Aggregate to section level (THE ASSUMPTION VERIFICATION STEP)
+
+    # Aggregate to section means
     section_means = df.groupby(["section_id", "treatment_group"])["test_score"].mean().reset_index()
-    
-    new_method = section_means[section_means["treatment_group"] == "new_method"]["test_score"]
-    standard = section_means[section_means["treatment_group"] == "standard"]["test_score"]
-    
-    t_stat, p_val = stats.ttest_ind(new_method, standard)
-    effect = new_method.mean() - standard.mean()
-    
+    new = section_means[section_means["treatment_group"] == "new_method"]["test_score"]
+    std = section_means[section_means["treatment_group"] == "standard"]["test_score"]
+
+    t, p = stats.ttest_ind(new, std)
+
     result = {
-        "significant": bool(p_val < 0.05),
-        "p_value": float(p_val),
-        "effect_size": float(effect),
-        "test_used": "t-test on section means (aggregated to unit of treatment assignment)",
-        "mean_new_method": float(new_method.mean()),
-        "mean_standard": float(standard.mean())
+        "significant": bool(p < 0.05),
+        "p_value": float(p),
+        "effect_size": float(new.mean() - std.mean()),
+        "test_used": "t-test on section means",
+        "mean_new_method": float(new.mean()),
+        "mean_standard": float(std.mean())
     }
-    
+
     os.makedirs("/output", exist_ok=True)
     with open("/output/analysis.json", "w") as f:
         json.dump(result, f, indent=2)
-    
-    # Also show what naive student-level analysis would give
-    naive_new = df[df["treatment_group"] == "new_method"]["test_score"]
-    naive_std = df[df["treatment_group"] == "standard"]["test_score"]
-    naive_t, naive_p = stats.ttest_ind(naive_new, naive_std)
-    print(f"Naive student-level p: {naive_p:.6f}")
-    print(f"Section-level p: {p_val:.6f}")
 
 if __name__ == "__main__":
     main()
@@ -831,77 +675,77 @@ if __name__ == "__main__":
 
 ### N5: censored-survival
 
-**Assumption tested:** Complete observation -- standard descriptive stats assume all events are observed
+**Assumption tested:** Complete observation (no censoring)
 
-**The trap:** Clinical trial data where 35% of patients are right-censored (study ended before recovery, or they withdrew). A column called `study_status` indicates whether the patient actually recovered or was censored, but the instruction doesn't mention censoring. Naive analysis (mean/median of observed recovery_days, t-test) treats censored times as complete observations, biasing the estimate downward and creating a false significant difference between two drugs. Proper survival analysis (Kaplan-Meier for medians, log-rank for comparison) gives the correct answer.
+**Trap:** 500 patients, 35% right-censored. Column `study_status` indicates "recovered" / "ongoing_at_study_end" / "withdrew". Drug A has more censoring than Drug B by design, so naive stats make Drug A look faster (only fast recoverers are counted). Naive t-test gives p ~0.02 (false significance). Log-rank test gives p ~0.30 (no real difference).
 
-#### generate_data.py specification
+**Data generation (`_build/generate_censored.py`):**
 
 ```
 Seed: 42
-N: 500 patients (250 drug_A, 250 drug_B)
+500 patients (250 per drug)
 
-True recovery time distribution:
-  Drug A: Weibull(shape=1.5, scale=70)  -- median ~58 days
-  Drug B: Weibull(shape=1.5, scale=72)  -- median ~60 days
-  (Very similar -- NO real difference between drugs)
+True recovery: Drug A ~ Weibull(shape=1.5, scale=70), Drug B ~ Weibull(shape=1.5, scale=72)
+  (similar -- no real difference)
 
-Censoring mechanism:
-  Censoring time: Uniform(30, 90) for each patient
-  Observed time = min(true_recovery, censoring_time)
+Censoring:
+  Drug A censoring times ~ Uniform(25, 80)  (aggressive)
+  Drug B censoring times ~ Uniform(35, 95)  (lenient)
+  observed_time = min(true_recovery, censoring_time)
   study_status = "recovered" if true_recovery <= censoring_time
-                 "ongoing_at_study_end" if true_recovery > censoring_time AND rand > 0.15
-                 "withdrew" if true_recovery > censoring_time AND rand <= 0.15
+                 "ongoing_at_study_end" (85% of censored)
+                 "withdrew" (15% of censored)
 
-  This creates ~35% censoring overall.
+Columns: patient_id, drug, recovery_days, study_status
+File: environment/clinical_trial.csv
 
-Key bias mechanism:
-  Drug A gets MORE censoring than Drug B by design:
-  Drug A censoring times: Uniform(25, 80)  -- more aggressive censoring
-  Drug B censoring times: Uniform(35, 95)  -- less aggressive censoring
-  
-  This means Drug A's "recovered" patients are biased toward FAST recoverers
-  (slow recoverers in Drug A were more likely to be censored).
-  Naive mean of observed recovery_days for Drug A will be LOWER (faster)
-  than Drug B, creating a false impression that Drug A is better.
+VALIDATION:
+  1. Overall censoring rate 30-40%
+  2. Drug A censoring rate > Drug B censoring rate
+  3. Naive t-test on recovery_days: p < 0.05 (Drug A looks faster)
+  4. Log-rank test: p > 0.10 (no real difference)
+  5. Naive median(Drug A) < naive median(Drug B)
+  6. Kaplan-Meier medians within 5 days of each other
 
-VALIDATION (run after generation, assert all hold):
-  1. Overall censoring rate between 30% and 40%
-  2. Drug A censoring rate > Drug B censoring rate (by design)
-  3. Naive t-test on recovery_days (ignoring censoring): p < 0.05 
-     (Drug A looks significantly faster)
-  4. Log-rank test (proper survival comparison): p > 0.10 
-     (no real difference)
-  5. Naive median recovery for Drug A < naive median for Drug B 
-     (biased by differential censoring)
-  6. Kaplan-Meier median for Drug A ≈ Kaplan-Meier median for Drug B 
-     (within 5 days)
-
-Output columns: patient_id, drug, recovery_days, study_status
-drug values: "drug_A", "drug_B"
-study_status values: "recovered", "ongoing_at_study_end", "withdrew"
-Save as: environment/clinical_trial.csv
+Tuning: adjust censoring time distributions to control differential censoring.
 ```
 
-#### instruction.md
+**Dockerfile for this task adds lifelines:**
+
+```dockerfile
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir \
+    numpy==1.26.4 \
+    pandas==2.2.2 \
+    scipy==1.13.1 \
+    scikit-learn==1.5.1 \
+    statsmodels==0.14.2 \
+    lifelines==0.29.0
+
+WORKDIR /workspace
+COPY *.csv /workspace/
+```
+
+**instruction.md:**
 
 ```markdown
 # Clinical Trial Analysis
 
-A clinical trial compared two drugs (Drug A and Drug B) for patient recovery. 
+A clinical trial compared two drugs (Drug A and Drug B) for patient recovery.
 The data is in `clinical_trial.csv` with columns:
 
 - `patient_id` -- unique patient identifier
 - `drug` -- which drug the patient received ("drug_A" or "drug_B")
 - `recovery_days` -- number of days until recovery
-- `study_status` -- patient's status ("recovered", "ongoing_at_study_end", 
+- `study_status` -- patient's status ("recovered", "ongoing_at_study_end",
   or "withdrew")
 
-Analyze the data and determine whether there is a significant difference 
-in recovery times between the two drugs. Report the median recovery time 
+Analyze the data and determine whether there is a significant difference
+in recovery times between the two drugs. Report the median recovery time
 for each drug and whether the difference is statistically significant.
 
-Save your results to `/output/analysis.json` with this structure:
+Save your results to `/output/analysis.json`:
 
 {
   "median_recovery_drug_a": 58.0,
@@ -912,81 +756,52 @@ Save your results to `/output/analysis.json` with this structure:
 }
 ```
 
-#### verify.py logic
+**verify.py checks:**
 
 ```
 1. Load /output/analysis.json
-2. Check required fields: significant_difference, p_value
-3. PRIMARY CHECK: p_value must be > 0.05  <-- KEY DISCRIMINATOR
-   (Naive t-test gives p ~0.02; log-rank gives p ~0.30)
-4. OR: significant_difference must be false
-5. SECONDARY CHECK: median_recovery_drug_a must be > 50 
-   (Naive median is ~42; KM median is ~58. Catches downward bias.)
-
-If p_value <= 0.05 AND significant_difference is true: reward = 0,
-  reason = "p_value={val} suggests naive comparison without accounting 
-  for censored observations (expected p > 0.05 with survival analysis)"
+2. Required: significant_difference, p_value
+3. p_value > 0.05 OR significant_difference == false   ← KEY DISCRIMINATOR
+   Naive t-test gives p ~0.02 → fails. Log-rank gives p ~0.30 → passes.
+4. median_recovery_drug_a > 50 (KM median ~58; naive median ~42 → fails)
 ```
 
-Note: The verifier should NOT require `lifelines` to be installed. It only checks the JSON output values. The oracle solution uses lifelines (or manual KM computation).
-
-#### solve.py (oracle)
+**solve.py (oracle):**
 
 ```python
 import pandas as pd
-import numpy as np
-from lifelines import KaplanMeierFitter, statistics as lf_stats
+from lifelines import KaplanMeierFitter
+from lifelines.statistics import logrank_test
 import json, os
 
 def main():
     df = pd.read_csv("clinical_trial.csv")
-    
-    # Step 1: Recognize censoring (THE ASSUMPTION VERIFICATION STEP)
-    # study_status tells us which observations are complete
-    df["event_observed"] = (df["study_status"] == "recovered").astype(int)
-    
-    censoring_rate = 1 - df["event_observed"].mean()
-    print(f"Censoring rate: {censoring_rate:.1%}")
-    
-    # Step 2: Kaplan-Meier for median recovery times
+    df["event"] = (df["study_status"] == "recovered").astype(int)
+
+    a = df[df["drug"] == "drug_A"]
+    b = df[df["drug"] == "drug_B"]
+
     kmf = KaplanMeierFitter()
-    
-    drug_a = df[df["drug"] == "drug_A"]
-    drug_b = df[df["drug"] == "drug_B"]
-    
-    kmf.fit(drug_a["recovery_days"], event_observed=drug_a["event_observed"], label="Drug A")
+    kmf.fit(a["recovery_days"], event_observed=a["event"])
     median_a = kmf.median_survival_time_
-    
-    kmf.fit(drug_b["recovery_days"], event_observed=drug_b["event_observed"], label="Drug B")
+
+    kmf.fit(b["recovery_days"], event_observed=b["event"])
     median_b = kmf.median_survival_time_
-    
-    # Step 3: Log-rank test
-    results = lf_stats.logrank_test(
-        drug_a["recovery_days"], drug_b["recovery_days"],
-        event_observed_A=drug_a["event_observed"],
-        event_observed_B=drug_b["event_observed"]
-    )
-    
-    output = {
+
+    lr = logrank_test(a["recovery_days"], b["recovery_days"],
+                      event_observed_A=a["event"], event_observed_B=b["event"])
+
+    result = {
         "median_recovery_drug_a": float(median_a),
         "median_recovery_drug_b": float(median_b),
-        "significant_difference": bool(results.p_value < 0.05),
-        "p_value": float(results.p_value),
-        "test_used": "log-rank test (accounting for right-censored observations)"
+        "significant_difference": bool(lr.p_value < 0.05),
+        "p_value": float(lr.p_value),
+        "test_used": "log-rank test"
     }
-    
+
     os.makedirs("/output", exist_ok=True)
     with open("/output/analysis.json", "w") as f:
-        json.dump(output, f, indent=2)
-    
-    # Show naive comparison for contrast
-    naive_t, naive_p = __import__("scipy").stats.ttest_ind(
-        drug_a["recovery_days"], drug_b["recovery_days"]
-    )
-    print(f"Naive t-test p: {naive_p:.6f}")
-    print(f"Log-rank p: {results.p_value:.6f}")
-    print(f"Naive median A: {drug_a['recovery_days'].median():.1f}")
-    print(f"KM median A: {median_a:.1f}")
+        json.dump(result, f, indent=2)
 
 if __name__ == "__main__":
     main()
@@ -996,64 +811,58 @@ if __name__ == "__main__":
 
 ### N6: spurious-regression
 
-**Assumption tested:** Stationarity of variables in regression (no spurious regression from unit roots)
+**Assumption tested:** Stationarity of regression variables
 
-**The trap:** Two independent non-stationary time series (both random walks with drift). Naive OLS shows R² ~0.80 and a highly significant coefficient (p < 0.001) even though the variables are completely independent. This is the classic Granger-Newbold spurious regression problem. After differencing both variables, R² drops to ~0.01 and p > 0.50. The model must independently check for stationarity (ADF test) and difference the variables before regressing.
+**Trap:** Two independent random walks (social_media_mentions and monthly_revenue), both trending upward. Naive OLS gives R-squared ~0.80 and p < 0.001 (textbook spurious regression). After differencing both series, R-squared ~0.01 and p > 0.50 (correctly non-significant). Model must check stationarity (ADF test), difference, and re-regress.
 
-#### generate_data.py specification
+**Data generation (`_build/generate_spurious.py`):**
 
 ```
 Seed: 42
-N: 120 months (Jan 2015 - Dec 2024)
+N: 120 months ("2015-01" through "2024-12")
 
-Generate two INDEPENDENT random walks:
-  X[0] = 1000, Y[0] = 500
-  X[t] = X[t-1] + drift_x + N(0, sigma_x)
-  Y[t] = Y[t-1] + drift_y + N(0, sigma_y)
-  
-  drift_x = 5.0  (X trends upward, ~social media mentions growing)
-  drift_y = 3.0  (Y trends upward, ~revenue growing)
-  sigma_x = 15.0
-  sigma_y = 10.0
+X[0] = 1000, Y[0] = 500
+X[t] = X[t-1] + 5.0 + N(0, 15)   (random walk, independent)
+Y[t] = Y[t-1] + 3.0 + N(0, 10)   (random walk, independent)
 
-X and Y are generated from COMPLETELY SEPARATE random processes.
-Any correlation between them is purely spurious (both trend upward).
+X and Y share NO common noise component. Any correlation is spurious.
 
-VALIDATION (run after generation, assert all hold):
-  1. Naive OLS of Y on X: R² > 0.60 (spurious correlation from shared trend)
-  2. Naive OLS of Y on X: p-value < 0.001 (highly "significant")
-  3. ADF test on X: p-value > 0.05 (non-stationary, fail to reject unit root)
-  4. ADF test on Y: p-value > 0.05 (non-stationary)
-  5. ADF test on diff(X): p-value < 0.05 (stationary after differencing)
-  6. ADF test on diff(Y): p-value < 0.05 (stationary after differencing)
-  7. OLS of diff(Y) on diff(X): R² < 0.10 (no real relationship)
-  8. OLS of diff(Y) on diff(X): p-value > 0.10 (not significant)
-  9. Correlation between X and Y (levels) > 0.70 (strong spurious correlation)
-  10. Correlation between diff(X) and diff(Y) < 0.20 (no real correlation)
+Columns: month, social_media_mentions, monthly_revenue
+File: environment/marketing_data.csv
 
-Output columns: month, social_media_mentions, monthly_revenue
-month format: "2015-01", "2015-02", ..., "2024-12"
-Save as: environment/marketing_data.csv
+VALIDATION:
+  1. Naive OLS (Y on X levels): R-squared > 0.60
+  2. Naive OLS p-value < 0.001
+  3. ADF test on X: p > 0.05 (non-stationary)
+  4. ADF test on Y: p > 0.05 (non-stationary)
+  5. ADF on diff(X): p < 0.05 (stationary)
+  6. ADF on diff(Y): p < 0.05 (stationary)
+  7. OLS on differenced series: R-squared < 0.10
+  8. OLS on differenced series: p > 0.10
+  9. Correlation(X, Y levels) > 0.70
+  10. Correlation(diff(X), diff(Y)) < 0.20
+
+Tuning: increase drift or decrease noise SD for higher spurious R-squared.
 ```
 
-#### instruction.md
+**instruction.md:**
 
 ```markdown
 # Social Media and Revenue Analysis
 
-A company wants to understand the relationship between its social media 
-presence and revenue. You have monthly data in `marketing_data.csv` spanning 
+A company wants to understand the relationship between its social media
+presence and revenue. You have monthly data in `marketing_data.csv` spanning
 10 years with columns:
 
 - `month` -- the calendar month (YYYY-MM format)
 - `social_media_mentions` -- count of brand mentions across platforms
 - `monthly_revenue` -- total monthly revenue (thousands)
 
-Fit a regression model to quantify the relationship between social media 
-mentions and monthly revenue. Report the coefficient, R-squared, and 
-whether the relationship is statistically significant.
+Fit a regression model to quantify the relationship between social media
+mentions and monthly revenue. Report the coefficient, R-squared, and whether
+the relationship is statistically significant.
 
-Save your results to `/output/analysis.json` with this structure:
+Save your results to `/output/analysis.json`:
 
 {
   "coefficient": 0.45,
@@ -1063,24 +872,18 @@ Save your results to `/output/analysis.json` with this structure:
 }
 ```
 
-#### verify.py logic
+**verify.py checks:**
 
 ```
 1. Load /output/analysis.json
-2. Check required fields: r_squared, p_value
-3. PRIMARY CHECK: r_squared must be < 0.15  <-- KEY DISCRIMINATOR
-   (Naive OLS on levels: R² ~0.80. OLS on differences: R² ~0.01-0.05)
-4. SECONDARY CHECK: p_value must be > 0.05 OR significant must be false
-   (Differenced regression will be non-significant)
-
-If r_squared >= 0.15: reward = 0,
-  reason = "r_squared={val} suggests regression on non-stationary levels 
-  (spurious regression). Expected R² < 0.15 after differencing."
+2. Required: r_squared, p_value
+3. r_squared < 0.15               ← KEY DISCRIMINATOR (naive ~0.80 fails)
+4. p_value > 0.05 OR significant == false
 ```
 
-The R² gap is enormous (0.80 vs 0.01), making this verifier very robust. Even if the model uses a different approach (log differences, detrending), the R² will be well below 0.15 if it addresses non-stationarity.
+R-squared gap is ~80x (0.80 vs 0.01). Very robust verifier.
 
-#### solve.py (oracle)
+**solve.py (oracle):**
 
 ```python
 import pandas as pd
@@ -1091,46 +894,31 @@ import json, os
 
 def main():
     df = pd.read_csv("marketing_data.csv")
-    
     X = df["social_media_mentions"]
     Y = df["monthly_revenue"]
-    
-    # Step 1: Check stationarity (THE ASSUMPTION VERIFICATION STEP)
+
+    # Check stationarity
     adf_x = adfuller(X)
     adf_y = adfuller(Y)
-    print(f"ADF test X: stat={adf_x[0]:.3f}, p={adf_x[1]:.4f}")
-    print(f"ADF test Y: stat={adf_y[0]:.3f}, p={adf_y[1]:.4f}")
-    # Both should have p > 0.05 (non-stationary)
-    
-    # Step 2: Difference both series
+    print(f"ADF X: p={adf_x[1]:.4f}, ADF Y: p={adf_y[1]:.4f}")
+
+    # Difference
     dX = X.diff().dropna()
     dY = Y.diff().dropna()
-    
-    # Verify stationarity of differenced series
-    adf_dx = adfuller(dX)
-    adf_dy = adfuller(dY)
-    print(f"ADF test diff(X): stat={adf_dx[0]:.3f}, p={adf_dx[1]:.4f}")
-    print(f"ADF test diff(Y): stat={adf_dy[0]:.3f}, p={adf_dy[1]:.4f}")
-    
-    # Step 3: Regress differenced series
-    dX_const = sm.add_constant(dX)
-    model = sm.OLS(dY, dX_const).fit()
-    
+
+    # Regress differences
+    model = sm.OLS(dY, sm.add_constant(dX)).fit()
+
     result = {
         "coefficient": float(model.params.iloc[1]),
         "r_squared": float(model.rsquared),
         "p_value": float(model.pvalues.iloc[1]),
         "significant": bool(model.pvalues.iloc[1] < 0.05)
     }
-    
+
     os.makedirs("/output", exist_ok=True)
     with open("/output/analysis.json", "w") as f:
         json.dump(result, f, indent=2)
-    
-    # Show naive result for contrast
-    naive_model = sm.OLS(Y, sm.add_constant(X)).fit()
-    print(f"Naive R²: {naive_model.rsquared:.4f}, p: {naive_model.pvalues.iloc[1]:.6f}")
-    print(f"Differenced R²: {model.rsquared:.4f}, p: {model.pvalues.iloc[1]:.6f}")
 
 if __name__ == "__main__":
     main()
@@ -1138,70 +926,61 @@ if __name__ == "__main__":
 
 ---
 
-## Build Checklist
+## Build Sequence
 
-For each of the 6 NEW tasks (N1-N6):
+**Phase 1: Copy existing tasks**
+```bash
+mkdir -p tasks jobs _build
+cp -r ../V2/P1_surface-consequence/tasks/multicollinearity-after-log-transform tasks/multicollinearity-after-log
+cp -r ../V2/P1_surface-consequence/tasks/deduplication-loses-valid-longitudinal-data tasks/longitudinal-data-structure
+cp -r ../V2/P2_cascading-multistep/tasks/wrong-sampling-cascades-to-wrong-test tasks/clustered-parametric-test
+cp -r ../V2/P3_implicit-constraints/tasks/p3-survivorship-bias-in-dataset tasks/survivorship-bias-sample
+# Then update task.toml name field in each
+```
 
-- [ ] Write generate_data.py with fixed seed
-- [ ] Run generate_data.py, verify all validation conditions hold
-- [ ] If validation fails, adjust parameters and re-run
-- [ ] Save generated CSV to environment/
-- [ ] Write instruction.md (no assumption hints)
-- [ ] Write task.toml (schema 1.2, allow_internet = true)
-- [ ] Write Dockerfile (python:3.11-slim + pinned deps)
-- [ ] Write solution/solve.py (oracle)
-- [ ] Write solution/solve.sh
-- [ ] Write tests/verify.py
-- [ ] Write tests/test.sh
-- [ ] Local test: run solve.py, then verify.py -- must get reward=1
-- [ ] Local test: run verify.py without solve.py output -- must get reward=0
-- [ ] Local test: write a "naive" stub (plain OLS / uncorrected test), verify it gets reward=0
+**Phase 2: Generate data for new tasks**
+For each N1-N6: run `_build/generate_<name>.py`, verify validation conditions, place CSV in `tasks/<name>/environment/`.
 
-For the 4 EXISTING tasks (E1-E4):
+**Phase 3: Build new task folders**
+For each N1-N6: create instruction.md, task.toml, Dockerfile, verify.py, test.sh, solve.py, solve.sh per the specs above.
 
-- [ ] Copy from source location to samples/ folder
-- [ ] Update task.toml name field
-- [ ] Verify folder structure matches Harbor layout
+**Phase 4: Local validation**
+For each new task:
+1. Run solve.py, then verify.py on its output -- must get reward=1
+2. Run verify.py with no output -- must get reward=0
+3. Write a naive stub (plain OLS / uncorrected test), run verify.py -- must get reward=0
 
-Harbor testing (all 10 tasks):
+**Phase 5: Harbor sanity**
+```bash
+# For each of 10 tasks:
+harbor run -p tasks/<name> -a oracle -o jobs -y   # must return reward=1
+harbor run -p tasks/<name> -a nop -o jobs -y      # must return reward=0
+```
 
-- [ ] harbor run -a oracle for each task -- all must return reward=1
-- [ ] harbor run -a nop for each task -- all must return reward=0
-- [ ] harbor run -a gemini-cli -m google/gemini-3-flash-preview -k 3 for each task
-- [ ] Record pass@1 and pass@3 for each task
+**Phase 6: Gemini eval**
+```bash
+export GEMINI_API_KEY=<REDACTED>
+# For each of 10 tasks:
+harbor run -p tasks/<name> -a gemini-cli -m google/gemini-3-flash-preview -k 3 -n 1 -o jobs -y
+```
 
 ---
 
 ## Parameter Tuning Guide
 
-If a generate_data.py validation fails, here is how to adjust each task:
+If a generator's validation fails, adjust these knobs:
 
-**N1 (autocorrelated-residuals):**
-- If X2 is not a false positive under naive OLS: increase rho (AR coefficient) or increase X2 trend slope
-- If X2 is still significant under Newey-West: decrease X2 trend slope or increase innovation_sd
-- If DW is not < 1.0: increase rho
-
-**N2 (multiple-comparisons):**
-- If fewer than 3 uncorrected significant pairs: try different seeds (43, 44, ...) or decrease within-group SD
-- If the real pair (involving D) doesn't survive Bonferroni: increase D's mean (try 110, 112)
-- If too many pairs survive Bonferroni: decrease D's mean (try 106)
-
-**N3 (influential-outliers):**
-- If full-data coefficient is not > 0.60: move influential X values further out (try 95, 98, 101, 104) or increase their Y values
-- If clean-data coefficient is not in [0.20, 0.45]: adjust the true slope or noise SD
-- If influential points are Y-outliers (|z| > 2.5): lower their Y values slightly
-
-**N4 (clustered-treatment):**
-- If student-level p is not < 0.01: increase treatment effect (try 2.0) or decrease student noise
-- If section-level p is not > 0.05: decrease treatment effect (try 1.0) or increase section SD
-- Main tradeoff: treatment effect must be large enough to be "significant" at student level but not at section level
-
-**N5 (censored-survival):**
-- If naive t-test p is not < 0.05: increase differential censoring (make Drug A censoring more aggressive)
-- If log-rank p is not > 0.10: make the true distributions more similar (closer scale parameters)
-- If censoring rate is not 30-40%: adjust censoring time distributions
-
-**N6 (spurious-regression):**
-- If naive R² is not > 0.60: increase drift values or decrease noise SDs
-- If differenced R² is not < 0.10: verify the series are truly independent (no shared noise component)
-- If ADF tests don't show unit roots: increase noise SDs relative to drift
+| Task | Problem | Fix |
+|------|---------|-----|
+| N1 | X2 not false-positive | Increase rho or X2 trend slope |
+| N1 | X2 still significant after Newey-West | Decrease X2 trend slope or increase innovation SD |
+| N2 | < 3 uncorrected false positives | Try seeds 43, 44, ... |
+| N2 | Real pair doesn't survive Bonferroni | Increase D mean to 110 |
+| N3 | Full-data coefficient not > 0.60 | Move influential X values further out or raise their Y |
+| N3 | Influential points detectable by Y z-score | Lower their Y values |
+| N4 | Student-level p not < 0.01 | Increase treatment effect or decrease student noise |
+| N4 | Section-level p not > 0.05 | Decrease treatment effect or increase section SD |
+| N5 | Naive t-test p not < 0.05 | Increase differential censoring |
+| N5 | Log-rank p not > 0.10 | Make drug distributions more similar |
+| N6 | Naive R-squared not > 0.60 | Increase drift or decrease noise |
+| N6 | Differenced R-squared not < 0.10 | Verify no shared noise component |
