@@ -1,0 +1,31 @@
+schema_version = "1.2"
+
+[task]
+name = "sanjith/spurious-regression"
+description = "Regress monthly revenue on social media mentions from 10 years of trending data and correctly quantify whether the relationship is real or an artifact of the time series structure."
+authors = [{ name = "Sanjith" }]
+keywords = ["data-science", "statistics", "time-series", "regression"]
+
+[metadata]
+
+[agent]
+timeout_sec = 900.0
+
+[verifier]
+timeout_sec = 300.0
+
+[verifier.env]
+
+[environment]
+build_timeout_sec = 900.0
+os = "linux"
+cpus = 2
+memory_mb = 4096
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

@@ -1,0 +1,31 @@
+schema_version = "1.2"
+
+[task]
+name = "sanjith/longitudinal-data-structure"
+description = "Build a readmission risk classifier on a patient-visit dataset where naive deduplication destroys the longitudinal signal."
+authors = [{ name = "Sanjith" }]
+keywords = ["data-science", "machine-learning", "longitudinal", "feature-engineering"]
+
+[metadata]
+
+[agent]
+timeout_sec = 900.0
+
+[verifier]
+timeout_sec = 300.0
+
+[verifier.env]
+
+[environment]
+build_timeout_sec = 900.0
+os = "linux"
+cpus = 2
+memory_mb = 4096
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
