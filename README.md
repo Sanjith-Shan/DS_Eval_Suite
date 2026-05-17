@@ -61,7 +61,7 @@ Trajectory inspection confirms the behavioral pattern across all 30 trials. The 
 ## Project Structure
 
 ```
-DS_Eval_Suite/
+Post-Analysis_Eval_Suite/
 ├── README.md
 └── experiments/
     ├── V1/                          # Round 1, 7 probing tasks
