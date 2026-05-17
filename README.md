@@ -1,275 +1,127 @@
-# DS Eval Suite
+# Post-Analysis Eval Suite
 
-Harbor-format evaluations of frontier-model data-science ability. The repo
-captures three successive iterations of task design (V1 → V2 → V3), each
-targeting a different theory of where frontier models fail at data work.
+An evaluation framework that systematically identifies and tests a blind spot in frontier AI models. Through iterative experimentation across 40+ candidate tasks, I discovered that Gemini Flash consistently skips post-analysis validation steps that any senior data scientist would perform automatically. I then built a focused 10-task suite around that finding, achieving a 0% pass rate across all 30 trials.
 
-- **V1** — seven thematically-chosen tasks (causal inference, stats, ML,
-  ETL). The original deliverable.
-- **V2** — tasks reorganised by *failure pattern* rather than topic. Four
-  patterns (P1–P4) × ~5–6 tasks each.
-- **V3** — context and reference material for the next iteration
-  (no tasks committed yet).
+## The Problem
 
-Every task is Harbor-format: a sandboxed `environment/`, a known-good
-`solution/`, and a programmatic `tests/verify.py`. No LLM-as-judge — every
-verifier checks substantive correctness on machine-readable output.
+Frontier language models can execute data science workflows competently. They fit regressions, run hypothesis tests, build classifiers, and handle common pitfalls like Simpson's paradox or data leakage. But executing an analysis and validating an analysis are different skills. A senior data scientist does not just produce a result. They check whether the method they chose was appropriate for the data they received, whether the assumptions behind the method actually hold, and whether their own actions introduced new problems.
 
----
+I set out to test whether Gemini Flash performs these validation steps on its own. It does not.
 
-## Top-level layout
+## The Approach
+
+Rather than guessing which tasks would be hard, I ran a structured search.
+
+**Round 1 (7 tasks).** Broad probing across causal inference, A/B testing, Simpson's paradox, ANOVA assumptions, ETL edge cases, time-series analysis, and data leakage. Gemini solved 6 of 7. The one failure revealed the pattern. The model fixed a data leakage bug perfectly but never checked whether the fix introduced multicollinearity. It applied the technique and stopped without looking at its own output.
+
+**Round 2 (21 tasks).** Four hypotheses about failure patterns, each tested with 5-6 tasks. Most hypotheses were wrong. But the tasks that consistently caught the model, regardless of which hypothesis they came from, all shared the same trait. They required the model to do something the instructions never asked for, based purely on what the data demanded.
+
+**Round 3 (10 tasks).** A focused suite built around the validated pattern, targeting **post-analysis validation** as a coherent slice of data science. Every task asks for a standard analysis where the data violates an assumption the instruction never mentions. The model must independently discover the violation and adjust.
+
+## Results
+
+All 10 tasks achieve 0% pass@3 against gemini-3-flash-preview (0 passes in 30 trials).
+
+| Task | What the Model Misses | Gap Between Naive and Correct |
+|------|----------------------|-------------------------------|
+| Multicollinearity after log transform | VIF check after variance-stabilizing transform | p = 0.12 vs p = 0.03 |
+| Clustered parametric test | Independence assumption for t-test on clustered data | Wrong test type entirely |
+| Survivorship bias in sample | Selection bias from non-representative sampling | Missing bias acknowledgment |
+| Autocorrelated residuals | Durbin-Watson check on time-ordered residuals | p = 0.026 vs p = 0.070 |
+| Multiple comparisons | Bonferroni/BH correction across 28 pairwise tests | 7 pairs vs 2 pairs |
+| Clustered treatment assignment | Pseudo-replication from group-level treatment | p = 0.000014 vs p = 0.131 |
+| Censored survival data | Right-censoring requiring survival analysis | p = 0.013 vs p = 0.790 |
+| Spurious regression | Stationarity check on trending time series | R² = 0.86 vs R² = 0.015 |
+| Regression to the mean | Using comparison group for selected subgroup | p < 0.001 vs p = 0.90 |
+| Confounded group comparison | ANCOVA controlling for baseline differences | p < 0.001 vs p = 0.68 |
+
+Every failure is a genuine analytical error with a large numeric gap, not a threshold technicality. The model produces wrong answers because it chooses wrong methods, not because it is close to right and misses by a small margin.
+
+## Why the Failures Are Real
+
+The verifiers check the numeric consequence of the validation step, never the process. There is no keyword matching on code, no AST inspection, no LLM-as-judge. Every check is deterministic.
+
+In the spurious regression task, the naive and correct R-squared values differ by 57x. In the clustered treatment task, the p-values differ by four orders of magnitude. In the multiple comparisons task, the model reports 7 significant pairs when only 2 are real. These are not borderline cases.
+
+Trajectory inspection confirms the behavioral pattern across all 30 trials. The model reads the data, runs the prompted analysis, gets reasonable-looking numbers, and reports them. It never runs a secondary diagnostic check. Not once in 30 trials.
+
+## Technical Details
+
+**Evaluation framework.** All tasks are built in Harbor format with sandboxed Docker environments, deterministic verifiers, and reproducible synthetic data (fixed seeds, pinned dependencies).
+
+**Quality assurance.** Every task passes a three-way sanity check before live evaluation.
+- Oracle agent (runs the reference solution) must score 1
+- Nop agent (does nothing) must score 0
+- Naive stub (runs the analysis without the validation step) must score 0
+
+**Dependencies.** Python 3.11, numpy 1.26.4, pandas 2.2.2, scipy 1.13.1, scikit-learn 1.5.1, statsmodels 0.14.2, lifelines 0.29.0 (for the censored survival task).
+
+**Model under test.** google/gemini-3-flash-preview via Harbor's gemini-cli agent.
+
+## Project Structure
 
 ```
 DS_Eval_Suite/
-├── README.md                       # this file
-├── .gitignore
-├── abundant-takehome-context.md    # assignment brief (gitignored)
-├── Abundant Research Take Home.pdf # assignment PDF (gitignored)
-├── .gemini_key                     # API key (gitignored)
-├── .venv/                          # local virtualenv (gitignored)
+├── README.md
 └── experiments/
-    ├── V1/   # original 7-task suite + Gemini eval pipeline
-    ├── V2/   # failure-pattern reorganisation (P1–P4)
-    └── V3/   # next-iteration context (planning stage)
+    ├── V1/                          # Round 1, 7 probing tasks
+    │   ├── samples/                 # the 7 task folders
+    │   ├── _build/                  # generators + eval pipeline
+    │   ├── logs/                    # Gemini results (3 trials per task)
+    │   └── figures/                 # pass rate visualizations
+    ├── V2/                          # Round 2, 21 tasks across 4 patterns
+    │   ├── P1_surface-consequence/  # 6 tasks
+    │   ├── P2_cascading-multistep/  # 5 tasks
+    │   ├── P3_implicit-constraints/ # 5 tasks
+    │   └── P4_overconfidence/       # 5 tasks
+    └── V3/                          # Round 3, final 10-task suite
+        ├── tasks/                   # the 10 task folders
+        ├── _build/                  # data generators
+        ├── jobs/                    # Harbor run outputs
+        └── REPORT.md               # full writeup
 ```
 
----
-
-## V1 — original 7-task suite
+Each task folder follows the standard Harbor layout.
 
 ```
-experiments/V1/
-├── samples/                                # the Harbor tasks (deliverable)
-│   ├── confounder-identification/
-│   │   ├── instruction.md
-│   │   ├── task.toml
-│   │   ├── environment/
-│   │   │   ├── Dockerfile
-│   │   │   └── data.csv
-│   │   ├── solution/
-│   │   │   ├── solve.py
-│   │   │   └── solve.sh
-│   │   └── tests/
-│   │       ├── test.sh
-│   │       └── verify.py
-│   ├── ab-test-early-stopping/             # same 4-subdir structure
-│   ├── data-leakage-detection/
-│   ├── statistical-test-assumptions/
-│   ├── etl-timezone-schema-merge/
-│   ├── time-series-regime-change/
-│   └── simpsons-paradox/
-│
-├── _build/                                 # data generators + eval pipeline
-│   ├── requirements.txt
-│   ├── generate_confounder.py
-│   ├── generate_ab_test.py
-│   ├── generate_leakage.py
-│   ├── generate_stats_assumptions.py
-│   ├── generate_etl.py
-│   ├── generate_timeseries.py
-│   ├── generate_simpsons.py
-│   ├── smoke_test.py                       # oracle/nop sanity check
-│   ├── run_gemini_battery.sh               # 7 tasks × 3 trials → jobs/
-│   ├── finalize_logs.sh                    # jobs/ → logs/ reorg
-│   ├── make_plots.py                       # logs/ → figures/
-│   ├── failure_analysis.py
-│   ├── fill_report.py
-│   └── build_submission.sh
-│
-├── logs/                                   # finalised run logs, 3 trials/task
-│   ├── confounder-identification/{trial1,trial2,trial3}/
-│   ├── ab-test-early-stopping/{trial1,trial2,trial3}/
-│   ├── data-leakage-detection/{trial1,trial2,trial3}/
-│   ├── statistical-test-assumptions/{trial1,trial2,trial3}/
-│   ├── etl-timezone-schema-merge/{trial1,trial2,trial3}/
-│   ├── time-series-regime-change/{trial1,trial2,trial3}/
-│   └── simpsons-paradox/{trial1,trial2,trial3}/
-│
-├── jobs/                                   # raw harbor run output (gitignored)
-│   └── <task>-gemini/<task>__<runid>/{agent,artifacts,verifier}/
-│
-└── figures/
-    ├── pass_rates.png
-    ├── difficulty_curve.png
-    └── pass_table.md
-```
-
----
-
-## V2 — failure-pattern reorganisation
-
-Four patterns (P1–P4), each its own self-contained subproject with its own
-context doc, tasks, and run logs.
-
-```
-experiments/V2/
-├── P1_surface-consequence/                 # one fix → one obvious metric change
-│   ├── pattern-1-CONTEXT.md
-│   ├── GENERAL_REFERENCE.md
-│   ├── harbor-reference.md
-│   ├── tasks/
-│   │   ├── onehot-rare-categories-overfit/{environment,solution,tests}/
-│   │   ├── outlier-removal-kills-minority-class/
-│   │   ├── normalization-destroys-temporal-feature/
-│   │   ├── mnar-imputation-destroys-signal/
-│   │   ├── multicollinearity-after-log-transform/
-│   │   └── deduplication-loses-valid-longitudinal-data/
-│   ├── _build/                             # data gens + "named fix only" probes
-│   │   ├── generate_onehot.py / named_fix_only_onehot.py
-│   │   ├── generate_outlier.py / named_fix_only_outlier.py
-│   │   ├── generate_temporal.py / named_fix_only_temporal.py
-│   │   ├── generate_mnar.py / named_fix_only_mnar.py
-│   │   ├── generate_multicol.py / named_fix_only_multicol.py
-│   │   ├── generate_dedup.py / named_fix_only_dedup.py
-│   │   ├── check_no_delta.py
-│   │   └── run_gemini_p1.sh
-│   ├── results/
-│   │   ├── P1_live_eval_report.md
-│   │   ├── P1_verification_report.md
-│   │   └── gemini_run.log
-│   └── jobs/                               # gemini + t1..t6 nop/oracle runs
-│
-├── P2_cascading-multistep/                 # early bug poisons a downstream step
-│   ├── pattern-2-CONTEXT.md
-│   ├── P2_report.md
-│   ├── tasks/
-│   │   ├── wrong-aggregation-cascades-to-wrong-trend/
-│   │   ├── wrong-date-parsing-cascades-to-wrong-seasonality/
-│   │   ├── wrong-encoding-cascades-to-wrong-model/
-│   │   ├── wrong-join-cascades-to-wrong-report/
-│   │   └── wrong-sampling-cascades-to-wrong-test/
-│   │       (each: generate_data.py + instruction.md + task.toml
-│   │              + environment/{data,Dockerfile}
-│   │              + solution/{solve.py,solve.sh}
-│   │              + tests/{test.sh,verify.py})
-│   └── jobs/                               # gemini / nop / oracle per task
-│
-├── P3_implicit-constraints/                # unstated constraint must be inferred
-│   ├── pattern-3-CONTEXT.md
-│   ├── P3_REPORT.md
-│   ├── tasks/
-│   │   ├── p3-class-imbalance-not-mentioned/
-│   │   ├── p3-survivorship-bias-in-dataset/
-│   │   ├── p3-target-leakage-from-column-name/
-│   │   ├── p3-temporal-leakage-from-random-split/
-│   │   └── p3-units-mismatch-across-columns/
-│   ├── results/                            # (currently empty)
-│   └── jobs/                               # gemini-v2 + nop/oracle (both runs)
-│
-└── P4_overconfidence/                      # claims that outrun the evidence
-    ├── pattern-4-CONTEXT.md
-    ├── P4_REPORT.md
-    ├── tasks/
-    │   ├── underpowered-ab-test/
-    │   ├── small-sample-strong-claim/
-    │   ├── extrapolation-beyond-training/
-    │   ├── observational-causal-claim/
-    │   └── contradictory-data-sources/
-    └── test_results/
-        └── jobs/                           # gemini / nop / oracle per task
-```
-
-Per-pattern, each task follows the same Harbor layout as V1:
-
-```
-tasks/<task-name>/
-├── instruction.md          # prompt shown to the agent
-├── task.toml               # Harbor task config
-├── generate_data.py        # (V2 only) deterministic data generator
+<task>/
+├── instruction.md          # the prompt (no hints about the violation)
+├── task.toml               # Harbor config
 ├── environment/
 │   ├── Dockerfile
-│   └── *.csv               # data the agent sees
+│   └── *.csv               # synthetic data
 ├── solution/
-│   ├── solve.py            # reference oracle solution
-│   └── solve.sh
+│   ├── solve.sh
+│   └── solve.py            # reference oracle
 └── tests/
     ├── test.sh
-    └── verify.py           # programmatic correctness check
+    └── verify.py            # deterministic verifier
 ```
 
-Each P*_* folder also keeps copies of the brief PDF and the
-`GENERAL_REFERENCE.md` / `harbor-reference.md` so it stays standalone.
+## Running the Suite
 
----
-
-## V3 — next iteration (context only)
-
-```
-experiments/V3/
-├── Abundant Research Take Home.pdf
-├── CONTEXT.md                  # working notes for V3 design
-└── harbor-reference.md
-```
-
-No tasks committed yet — V3 is currently in the planning stage.
-
----
-
-## Prerequisites
+Prerequisites include Docker Desktop and Harbor (`uv tool install harbor`).
 
 ```bash
-# Docker Desktop must be running
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv tool install harbor
-```
+# Sanity check a single task
+harbor run -p experiments/V3/tasks/autocorrelated-residuals -a oracle -y
+harbor run -p experiments/V3/tasks/autocorrelated-residuals -a nop -y
 
-Python deps for data regeneration: `pip install -r experiments/V1/_build/requirements.txt`.
-
----
-
-## Common workflows
-
-### Sanity-check any task
-
-```bash
-# Oracle should pass (reward 1), nop should fail (reward 0)
-harbor run -p experiments/V1/samples/confounder-identification -a oracle -y
-harbor run -p experiments/V1/samples/confounder-identification -a nop    -y
-
-# Same shape for V2 tasks
-harbor run -p experiments/V2/P1_surface-consequence/tasks/onehot-rare-categories-overfit -a oracle -y
-```
-
-### Run the V1 Gemini battery (7 × 3)
-
-```bash
+# Run Gemini eval (3 trials)
 export GEMINI_API_KEY=<your key>
-bash experiments/V1/_build/run_gemini_battery.sh    # → jobs/
-bash experiments/V1/_build/finalize_logs.sh         # jobs/ → logs/
-.venv/bin/python experiments/V1/_build/make_plots.py   # → figures/
+harbor run -p experiments/V3/tasks/autocorrelated-residuals \
+  -a gemini-cli -m google/gemini-3-flash-preview -k 3 -n 1 -o jobs -y
 ```
 
-### Run a V2 pattern battery
+## The Finding
 
-```bash
-export GEMINI_API_KEY=<your key>
-bash experiments/V2/P1_surface-consequence/_build/run_gemini_p1.sh
-# results land under experiments/V2/P1_surface-consequence/jobs/
-```
+Gemini Flash does not lack knowledge. It knows what every diagnostic technique is and can explain any of them on demand. What it lacks is the behavioral habit of applying those techniques as part of its workflow. It executes the prompted task and stops. The gap between "can explain Durbin-Watson" and "actually checks Durbin-Watson after fitting OLS on monthly data" is the gap this suite measures.
 
-### Regenerate a task's bundled data
+This is a systematic and reproducible result. Thirty out of thirty trials, across ten tasks testing seven different statistical assumptions, produced the same behavioral pattern. The model executes the technique. It never validates the result.
 
-```bash
-# V1
-.venv/bin/python experiments/V1/_build/generate_confounder.py
+## Built With
 
-# V2 (per-task generator)
-.venv/bin/python experiments/V2/P1_surface-consequence/_build/generate_onehot.py
-.venv/bin/python experiments/V2/P2_cascading-multistep/tasks/wrong-aggregation-cascades-to-wrong-trend/generate_data.py
-```
-
-All generators use fixed seeds — output is reproducible.
-
----
-
-## Notes
-
-- `tests/` is mounted only at verifier time; ground truth never lives in
-  `environment/`.
-- `jobs/` is gitignored; finalised, named runs live under `logs/` (V1) or
-  `<pattern>/jobs/` and `<pattern>/results/` (V2).
-- Each V2 pattern is self-contained — its CONTEXT.md, report, tasks, and
-  runs can be read without the others.
-- See `experiments/V1/_build/fill_report.py` and the per-pattern
-  `P*_REPORT.md` files for the methodology, design rationale, and measured
-  pass@1/pass@3 against `gemini-3-flash-preview`.
+- **Harbor** for task authoring, sandboxed execution, and trajectory capture
+- **Claude Code** for building task infrastructure (generators, verifiers, oracles, Dockerfiles) from specifications
+- **Python** (numpy, pandas, scipy, scikit-learn, statsmodels, lifelines) for data generation and reference solutions
+- **Docker** for reproducible sandboxed environments
