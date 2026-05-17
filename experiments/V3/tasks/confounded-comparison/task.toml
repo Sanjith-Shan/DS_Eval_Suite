@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "causal-inference", "confounding"]
 
 [metadata]
+category = "data-science"
+tags = ["confounding", "regression", "validation"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle runs ANCOVA (outcome ~ baseline + program) to control for the 20-point baseline gap between programs. Naive between-program t-test on outcome_score is confounded by the baseline gap; gain-score t-test still produces a chance significant result from sample noise in the gain difference."""
+verification_explanation = """Checks p_value > 0.05 in either direction. Programs have identical true effects (+10 on baseline), so any significant difference is a false positive. Naive p<1e-48, gain-score p~0.001, ANCOVA p~0.68."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

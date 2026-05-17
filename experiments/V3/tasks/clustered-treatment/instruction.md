@@ -5,7 +5,7 @@ against the standard approach. Students were organized into 40 sections,
 with each section using either the new method or the standard method. Test
 scores were recorded for all students.
 
-The data is in `education_study.csv` with columns:
+The data is in `/workspace/education_study.csv` with columns:
 
 - `student_id` -- unique student identifier
 - `section_id` -- which section the student belongs to
@@ -15,13 +15,10 @@ The data is in `education_study.csv` with columns:
 Determine whether the new teaching method produces significantly better
 test scores than the standard method.
 
-Save your results to `/output/analysis.json`:
+Save your results to `/output/analysis.json` with this schema (every value
+shown is a placeholder; substitute your own computed values):
 
 {
-  "significant": true,
-  "p_value": 0.03,
-  "effect_size": 2.5,
-  "test_used": "independent two-sample t-test",
-  "mean_new_method": 78.2,
-  "mean_standard": 75.7
+  "significant": "<bool>",
+  "p_value": "<value>"
 }

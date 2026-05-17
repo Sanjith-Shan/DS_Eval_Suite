@@ -2,7 +2,7 @@
 
 The company enrolled employees who scored below the 25th percentile on a skills
 assessment into a training program. Performance was measured before and after
-the program. The data is in `employee_training.csv` with columns:
+the program. The data is in `/workspace/employee_training.csv` with columns:
 
 - `employee_id` -- unique identifier
 - `group` -- employee group designation
@@ -12,11 +12,11 @@ the program. The data is in `employee_training.csv` with columns:
 Analyze the data to determine whether the training program significantly
 improved employee performance.
 
-Save your results to `/output/analysis.json`:
+Save your results to `/output/analysis.json` with this schema (every value
+shown is a placeholder; substitute your own computed values):
 
 {
-  "training_effective": true,
-  "p_value": 0.03,
-  "mean_improvement": 4.2,
-  "test_used": "paired t-test"
+  "training_effective": "<bool>",
+  "p_value": "<value>",
+  "mean_improvement": "<value>"
 }

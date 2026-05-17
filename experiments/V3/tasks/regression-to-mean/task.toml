@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "causal-inference", "regression-to-mean"]
 
 [metadata]
+category = "data-science"
+tags = ["confounding", "regression", "bias"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle runs ANCOVA (post ~ pre + group) to control for selection on pre-score. Naive within-group paired t-test on the selected training group shows ~5pt 'improvement' that is purely regression-to-the-mean."""
+verification_explanation = """Checks p_value > 0.05 OR training_effective == false. ANCOVA recovers beta_group ~ 0 with p ~ 0.90; paired t on training-only gives p ~ 5e-7."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

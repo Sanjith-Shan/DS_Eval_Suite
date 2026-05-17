@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "regression", "multicollinearity"]
 
 [metadata]
+category = "data-science"
+tags = ["regression", "diagnostics", "multicollinearity"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle log-transforms Y to fix heteroscedasticity, then handles the resulting ρ(X1,X2) ~ 0.99 collinearity (e.g., orthogonalisation, ridge, or VIF-aware reformulation) to recover all three true predictors. Plain OLS after log-transform leaves X2 at p~0.12."""
+verification_explanation = """Calls the agent's analyze() and checks X1, X2, X3 are all p<0.05 AND the final model's Breusch-Pagan p>0.05 (homoscedastic). Both the log fix and the collinearity fix must be applied."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

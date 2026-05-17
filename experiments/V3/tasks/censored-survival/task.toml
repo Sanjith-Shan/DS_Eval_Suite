@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "survival-analysis", "clinical-trial"]
 
 [metadata]
+category = "data-science"
+tags = ["survival-analysis", "hypothesis-testing", "diagnostics"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle uses Kaplan-Meier and the log-rank test to handle right-censored observations (patients still ongoing or withdrawn at study end). Naive t-test on recovery_days (treating all values as observed, or dropping censored patients) underestimates the true median and overstates the between-drug difference."""
+verification_explanation = """Checks p_value > 0.05 OR significant_difference == false (true effect is null after censoring is properly handled) AND median_recovery_drug_a > 50 (naive analysis of recovered-only patients gives ~48; the Kaplan-Meier estimate is ~54)."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

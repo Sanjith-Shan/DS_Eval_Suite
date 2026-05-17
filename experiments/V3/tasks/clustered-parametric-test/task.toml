@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "cascading-errors", "multi-step", "sampling", "hypothesis-test"]
 
 [metadata]
+category = "data-science"
+tags = ["clustering", "hypothesis-testing", "validation"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle samples stratified by store_id to preserve the urban/rural cluster composition, observes the bimodal within-group distribution, and applies a non-parametric or stratified-aware test. Simple random sampling triggers CLT-smoothing that hides the cluster structure and invites a Welch t-test that misses the loyalty effect."""
+verification_explanation = """Checks the loyalty effect is correctly detected (significant=true, p<0.05, effect_size in [0.05, 0.15], sample_size in [1000, 50000]) AND that test_used contains a non-parametric or stratified-aware keyword (rejects t-test/Welch/Student). Both the sampling and test choice must be right to pass."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 120.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "implicit-constraints", "data-awareness", "survivorship-bias"]
 
 [metadata]
+category = "data-science"
+tags = ["bias", "validation"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle reads /workspace/README.md, notes the dataset includes only active companies, runs the requested regression, AND explicitly flags survivorship bias and its implications for the VC investment decision in the report."""
+verification_explanation = """Greps the agent's analysis.md for both analysis-content keywords (regression, coefficient, p-value, ...) AND a bias-awareness keyword (survivorship, selection bias, ...). Agent passes only if they did the analysis AND raised the data quality concern."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

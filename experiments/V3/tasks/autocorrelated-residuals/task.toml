@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "regression", "time-series"]
 
 [metadata]
+category = "data-science"
+tags = ["regression", "time-series", "diagnostics"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle detects autocorrelated residuals via Durbin-Watson and refits with Newey-West (HAC) standard errors. HAC raises X2's p-value above 0.05, removing it from the significant set; naive OLS leaves X2 in."""
+verification_explanation = """Checks the agent reports X1 and X3 as significant (true positives) and excludes X2 and X4 (nulls). X2 is the discriminator: naive OLS gives p~0.026, HAC gives p~0.07. r_squared must be a valid proportion."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

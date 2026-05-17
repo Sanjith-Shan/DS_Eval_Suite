@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "education", "clustering"]
 
 [metadata]
+category = "data-science"
+tags = ["clustering", "hypothesis-testing"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle aggregates to section-level means before testing, recognising students are nested within sections and treatment was assigned at the section level. Naive student-level t-test inflates N from 40 to 1000 and produces a strongly significant false positive."""
+verification_explanation = """Checks p_value > 0.05 OR significant == false. Student-level t-test gives p ~ 1.4e-5 (fails); correct section-level analysis gives p ~ 0.13 (passes)."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

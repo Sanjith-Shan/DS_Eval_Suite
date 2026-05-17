@@ -7,6 +7,12 @@ authors = [{ name = "Sanjith" }]
 keywords = ["data-science", "statistics", "hypothesis-testing", "multiple-comparisons"]
 
 [metadata]
+category = "data-science"
+tags = ["multiple-testing", "hypothesis-testing"]
+difficulty_explanation = """The dataset is synthetic, generated to expose a specific statistical assumption that the obvious analysis silently violates. The statistical concepts involved are textbook-level for a senior data scientist or applied statistician, but the difficulty is behavioral: the instructions never tell the agent that a diagnostic check or correction is needed. The agent must independently notice the structural feature of the data that invalidates the obvious analysis and apply the right correction. Tests judgment, not knowledge."""
+expert_time_estimate_hours = 0.5
+solution_explanation = """Oracle applies a multiple-comparison correction (e.g., Bonferroni) across the 28 pairwise tests, isolating the two true D-related pairs. Uncorrected alpha=0.05 yields 5-7 significant pairs including several false positives."""
+verification_explanation = """Checks at least one pair involving formulation D (real signal) AND len(significant_pairs) <= 2 (correction must trim to the true D pairs). Reports family-wise error inflation otherwise."""
 
 [agent]
 timeout_sec = 900.0
@@ -18,7 +24,6 @@ timeout_sec = 300.0
 
 [environment]
 build_timeout_sec = 900.0
-os = "linux"
 cpus = 2
 memory_mb = 4096
 storage_mb = 4096

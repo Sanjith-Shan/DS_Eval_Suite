@@ -1,6 +1,6 @@
 # Monthly Revenue Analysis
 
-You have a dataset of monthly business metrics (`business_data.csv`) spanning
+You have a dataset of monthly business metrics (`/workspace/business_data.csv`) spanning
 10 years (2015-2024). The columns are:
 
 - `month` -- the calendar month
@@ -13,13 +13,14 @@ You have a dataset of monthly business metrics (`business_data.csv`) spanning
 Fit a linear regression model to predict `Y` from `X1`, `X2`, `X3`, and `X4`.
 Identify which predictors are statistically significant at the 5% level.
 
-Save your results to `/output/analysis.json` with this structure:
+Save your results to `/output/analysis.json` with this schema (every value
+shown is a placeholder; substitute your own computed values):
 
 {
-  "significant_predictors": ["X1", "X3"],
-  "coefficients": {"X1": 2.3, "X2": 0.1, "X3": 1.8, "X4": 0.05},
-  "p_values": {"X1": 0.001, "X2": 0.45, "X3": 0.003, "X4": 0.72},
-  "r_squared": 0.65
+  "significant_predictors": ["<predictor>", "<predictor>"],
+  "coefficients": {"X1": "<value>", "X2": "<value>", "X3": "<value>", "X4": "<value>"},
+  "p_values":     {"X1": "<value>", "X2": "<value>", "X3": "<value>", "X4": "<value>"},
+  "r_squared": "<value>"
 }
 
 List only predictors with p < 0.05 in `significant_predictors`. Include all
